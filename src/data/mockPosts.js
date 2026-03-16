@@ -1,0 +1,92 @@
+export const mockPosts = [
+  {
+    id: '1',
+    title: "Collection of Children's Books",
+    description: 'I have a collection of 15 children\'s books (ages 3-8) that my kids have outgrown. All in great condition! Includes popular titles like "The Very Hungry Caterpillar" and "Where the Wild Things Are".',
+    category: 'Books',
+    imageUrl: 'https://images.unsplash.com/photo-1705660800046-2113f479369a?w=600',
+    owner: {
+      id: 'u1',
+      name: 'Sarah Johnson',
+    },
+    createdAt: '2026-03-14T10:30:00Z',
+    location: 'Downtown, Main Street',
+  },
+  {
+    id: '2',
+    title: 'Winter Clothes - Size M',
+    description: 'Gently used winter jackets, sweaters, and scarves. Perfect condition, just doing a wardrobe refresh. Size Medium. Great for someone who needs warm clothes!',
+    category: 'Clothes',
+    imageUrl: 'https://images.unsplash.com/photo-1760124056977-36d8b8c12275?w=600',
+    owner: {
+      id: 'u2',
+      name: 'Michael Chen',
+    },
+    createdAt: '2026-03-13T15:45:00Z',
+    location: 'Westside, Oak Avenue',
+  },
+  {
+    id: '3',
+    title: 'Educational Toys for Toddlers',
+    description: 'Building blocks, puzzles, and learning toys suitable for ages 2-4. Clean and sanitized. My daughter has moved on to other activities, hope these can bring joy to another child!',
+    category: 'Toys',
+    imageUrl: 'https://images.unsplash.com/photo-1633104319071-4fa6fa12a613?w=600',
+    owner: {
+      id: 'u3',
+      name: 'Emily Rodriguez',
+    },
+    createdAt: '2026-03-12T09:20:00Z',
+    location: 'Northside, Park Lane',
+  },
+  {
+    id: '4',
+    title: 'Vintage Film Camera',
+    description: 'Canon AE-1 35mm film camera in working condition. Comes with a 50mm lens. Perfect for photography enthusiasts or someone wanting to learn film photography!',
+    category: 'Electronics',
+    imageUrl: 'https://images.unsplash.com/photo-1588420635201-3a9e2a2a0a07?w=600',
+    owner: {
+      id: 'u4',
+      name: 'David Kim',
+    },
+    createdAt: '2026-03-11T14:00:00Z',
+    location: 'Downtown, Creative District',
+  },
+  {
+    id: '5',
+    title: 'Mountain Bike - Good Condition',
+    description: 'Trek mountain bike, 21-speed, 26" wheels. Has some wear but fully functional. Recently serviced. Great for casual riding or commuting!',
+    category: 'Sports',
+    imageUrl: 'https://images.unsplash.com/photo-1652640867694-afdac071d881?w=600',
+    owner: {
+      id: 'u5',
+      name: 'Alex Turner',
+    },
+    createdAt: '2026-03-10T11:30:00Z',
+    location: 'Eastside, River Road',
+  },
+  {
+    id: '6',
+    title: 'Kitchen Cookware Set',
+    description: 'Complete set of pots, pans, and utensils. Stainless steel, good quality. Moving to a smaller place and downsizing. All pieces are clean and ready to use!',
+    category: 'Kitchen',
+    imageUrl: 'https://images.unsplash.com/photo-1628736787397-bc033be0fe53?w=600',
+    owner: {
+      id: 'u6',
+      name: 'Lisa Martinez',
+    },
+    createdAt: '2026-03-09T16:15:00Z',
+    location: 'Southside, Green Street',
+  },
+];
+
+export const categories = [
+  'Books',
+  'Clothes',
+  'Toys',
+  'Electronics',
+  'Sports',
+  'Kitchen',
+  'Furniture',
+  'Garden',
+  'Other',
+];
