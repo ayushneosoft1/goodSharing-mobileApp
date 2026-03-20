@@ -27,11 +27,13 @@ export default function LoginPage() {
 
     if (res.error) {
       setError(res.error);
+    } else if (res.data?.user) {
+      console.log("Login successful:", res.data.user);
+      // yaha redirect kar sakte ho
     } else {
-      // Optionally redirect or show success message
-
-      console.log("Login successful:", res.user);
+      setError("Something went wrong");
     }
+
     setLoading(false);
   };
 
@@ -42,7 +44,6 @@ export default function LoginPage() {
     setLoading(true);
     setError("");
 
-    // IMPORTANT: AuthContext expects (name, email, password)
     const res = await signup(
       signupFirstName,
       signupLastName,
@@ -52,8 +53,13 @@ export default function LoginPage() {
 
     if (res.error) {
       setError(res.error);
+    } else if (res.data?.user) {
+      console.log("Signup Successful:", res.data.user);
+
+      // optional: signup ke baad login tab pe switch karo
+      setIsLogin(true);
     } else {
-      console.log("Signup Successful:", res.user);
+      setError("Something went wrong");
     }
 
     setLoading(false);

@@ -21,10 +21,10 @@ export function AuthProvider({ children }) {
     try {
       const res = await signinAPI({ email, password });
 
-      if (res.user) {
+      if (res.data?.user) {
         // Save user in localStorage and state
-        localStorage.setItem("goodSharing_user", JSON.stringify(res.user));
-        setUser(res.user);
+        localStorage.setItem("goodSharing_user", JSON.stringify(res.data.user));
+        setUser(res.data.user);
       }
 
       return res; // return API response for handling success/error in page
