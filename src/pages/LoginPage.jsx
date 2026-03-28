@@ -1,35 +1,68 @@
-import React, { useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
-import './LoginPage.css';
+import React, { useState } from "react";
+import { useAuth } from "../contexts/AuthContext";
+import "./LoginPage.css";
 
 export default function LoginPage() {
   const { login, signup } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const [loginEmail, setLoginEmail] = useState('');
-  const [loginPassword, setLoginPassword] = useState('');
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
 
-  const [signupName, setSignupName] = useState('');
-  const [signupEmail, setSignupEmail] = useState('');
-  const [signupPassword, setSignupPassword] = useState('');
+  const [signupFirstName, setSignupFirstName] = useState("");
+  const [signupLastName, setSignupLastName] = useState("");
+  const [signupEmail, setSignupEmail] = useState("");
+  const [signupPassword, setSignupPassword] = useState("");
 
-  const handleLogin = (e) => {
+  // Handle Login
+
+  const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setTimeout(() => {
-      login(loginEmail, loginPassword);
-      setLoading(false);
-    }, 500);
+    setError("");
+
+    const res = await login(loginEmail, loginPassword);
+
+    if (res.error) {
+      setError(res.error);
+    } else if (res.data?.user) {
+      console.log("Login successful:", res.data.user);
+      // yaha redirect kar sakte ho
+    } else {
+      setError("Something went wrong");
+    }
+
+    setLoading(false);
   };
 
-  const handleSignup = (e) => {
+  // Handle SignUp
+
+  const handleSignup = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setTimeout(() => {
-      signup(signupEmail, signupPassword, signupName);
-      setLoading(false);
-    }, 500);
+    setError("");
+
+    const res = await signup(
+      signupFirstName,
+      signupLastName,
+      signupEmail,
+      signupPassword,
+    );
+
+    if (res.error) {
+      setError(res.error);
+    } else if (res.data?.user) {
+      console.log("Signup Successful:", res.data.user);
+
+      // optional: signup ke baad login tab pe switch karo
+      setIsLogin(true);
+    } else {
+      setError("Something went wrong");
+    }
+
+    setLoading(false);
   };
 
   return (
@@ -43,18 +76,20 @@ export default function LoginPage() {
 
         <div className="tabs">
           <button
-            className={`tab ${isLogin ? 'active' : ''}`}
+            className={`tab ${isLogin ? "active" : ""}`}
             onClick={() => setIsLogin(true)}
           >
             Login
           </button>
           <button
-            className={`tab ${!isLogin ? 'active' : ''}`}
+            className={`tab ${!isLogin ? "active" : ""}`}
             onClick={() => setIsLogin(false)}
           >
             Sign Up
           </button>
         </div>
+
+        {error && <div className="error-message">{error}</div>}
 
         {isLogin ? (
           <form onSubmit={handleLogin} className="form">
@@ -81,18 +116,29 @@ export default function LoginPage() {
             </div>
 
             <button type="submit" className="submit-btn" disabled={loading}>
-              {loading ? 'Logging in...' : 'Login'}
+              {loading ? "Logging in..." : "Login"}
             </button>
           </form>
         ) : (
           <form onSubmit={handleSignup} className="form">
             <div className="form-group">
-              <label>Name</label>
+              <label>First Name</label>
               <input
                 type="text"
-                placeholder="John Doe"
-                value={signupName}
-                onChange={(e) => setSignupName(e.target.value)}
+                placeholder="John"
+                value={signupFirstName}
+                onChange={(e) => setSignupFirstName(e.target.value)}
+                required
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Last Name</label>
+              <input
+                type="text"
+                placeholder="Doe"
+                value={signupLastName}
+                onChange={(e) => setSignupLastName(e.target.value)}
                 required
               />
             </div>
@@ -120,7 +166,7 @@ export default function LoginPage() {
             </div>
 
             <button type="submit" className="submit-btn" disabled={loading}>
-              {loading ? 'Creating account...' : 'Sign Up'}
+              {loading ? "Creating account..." : "Sign Up"}
             </button>
           </form>
         )}
