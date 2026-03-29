@@ -29,7 +29,7 @@ A React Native mobile application for sharing items within your community. Built
 
 ```bash
 # Install dependencies
-npm install
+npm install --legacy-peer-deps
 
 # Start Expo or Metro
 npx expo start

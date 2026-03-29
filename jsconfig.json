@@ -1,0 +1,8 @@
+{
+  "compilerOptions": {
+    "jsx": "react-native",
+    "moduleResolution": "node",
+    "target": "ESNext"
+  },
+  "exclude": ["node_modules"]
+}
