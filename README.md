@@ -1,30 +1,29 @@
-# goodSharing Web App
+# goodSharing Mobile App
 
-A React web application for sharing items within your community. Built with Vite and plain JavaScript (no TypeScript).
+A React Native mobile application for sharing items within your community. Built for iOS and Android using plain JavaScript.
 
 ## 🚀 Features
 
 - **Authentication**: Login and signup functionality
-- **Browse Posts**: View all items shared by community members  
+- **Browse Posts**: View all items shared by community members
 - **Post Details**: See complete information about shared items
 - **Create Posts**: Share your own items with the community
-- **Drawer Navigation**: Easy access via hamburger menu
 - **Light Sky Blue Theme**: Clean and modern UI
 
 ## 📱 Screens
 
-1. **Login/Signup** - User authentication with tabs
-2. **Posts List** - Browse all available items with grid layout
-3. **Post Detail** - View full item details
-4. **Create Post** - Share new items with form
+1. **Login/Signup** - Native authentication screens
+2. **Posts List** - Scrollable list of community items
+3. **Post Detail** - Detailed view of a specific item
+4. **Create Post** - Native form for sharing items
 
 ## 🛠️ Tech Stack
 
-- **React** 18.3
-- **Vite** - Fast build tool
-- **React Router** - Client-side routing
-- **JavaScript** - No TypeScript, kept simple!
-- **CSS** - Plain CSS modules
+- **React Native**
+- **React Navigation** - Native stack navigation
+- **JavaScript** - No TypeScript
+- **Context API** - State management
+- **StyleSheet** - Native styling
 
 ## 📦 Installation
 
@@ -32,16 +31,20 @@ A React web application for sharing items within your community. Built with Vite
 # Install dependencies
 npm install
 
-# Start development server
-npm run dev
+# Start Expo or Metro
+npx expo start
+# or
+npm start
 
-# Build for production
-npm run build
+# Run on iOS/Android
+npm run ios
+npm run android
 ```
 
 ## 🎨 Color Theme
 
 Light sky blue theme:
+
 - Primary: `#0ea5e9` (Sky Blue)
 - Background: `#e0f2fe` (Light Sky Blue)
 - Text: `#0c4a6e` (Dark Blue)
@@ -50,7 +53,8 @@ Light sky blue theme:
 
 ## 🔐 Authentication
 
-Currently uses **mock authentication** with localStorage:
+Currently uses **mock authentication** with AsyncStorage:
+
 - Any email/password combination works
 - User data is stored locally
 - In production, replace with your GraphQL backend API
@@ -87,6 +91,7 @@ src/
 Since you're on a free account, here's how to save this:
 
 **Option 1 - GitHub (Recommended):**
+
 ```bash
 git init
 git add .
@@ -96,6 +101,7 @@ git push -u origin main
 ```
 
 **Option 2 - Download Files:**
+
 - Copy all files to your local machine
 - Maintain the folder structure
 - Zip and save to cloud storage
