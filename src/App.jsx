@@ -2,6 +2,7 @@ import React from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { View, ActivityIndicator } from "react-native";
+import { registerRootComponent } from "expo";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import LoginPage from "./pages/LoginPage";
 import PostsListPage from "./pages/PostsListPage";
@@ -50,6 +51,8 @@ function Navigation() {
     </Stack.Navigator>
   );
 }
+
+registerRootComponent(App);
 
 export default function App() {
   return (
