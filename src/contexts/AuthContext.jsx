@@ -34,6 +34,9 @@ export function AuthProvider({ children }) {
           "goodSharing_user",
           JSON.stringify(res.data.user),
         );
+        if (res.data.token) {
+          await AsyncStorage.setItem("goodSharing_token", res.data.token);
+        }
         setUser(res.data.user);
       }
 
@@ -55,11 +58,14 @@ export function AuthProvider({ children }) {
           "goodSharing_user",
           JSON.stringify(res.data.user),
         );
+        if (res.data.token) {
+          await AsyncStorage.setItem("goodSharing_token", res.data.token);
+        }
         setUser(res.data.user);
       }
       return res; // return API response for handling success / error in page
     } catch (error) {
-      console.error("Signup failed", error);
+      console.error("Signup failed:", error);
       return { error: error.message || "Signup failed" };
     }
   };
@@ -68,6 +74,7 @@ export function AuthProvider({ children }) {
 
   const logout = async () => {
     await AsyncStorage.removeItem("goodSharing_user");
+    await AsyncStorage.removeItem("goodSharing_token");
     setUser(null);
   };
 

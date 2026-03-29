@@ -1,31 +1,85 @@
 /**
- * Mock Authentication Service
- * In production, replace these with real fetch/axios calls to your GraphQL or REST API
+ * Real Authentication Service calling GraphQL API
  */
+import { BASE_URL } from "./config";
 
 export const signinAPI = async ({ email, password }) => {
-  // Simulate network delay
-  await new Promise((resolve) => setTimeout(resolve, 1000));
+  const query = `
+    mutation Signin($email: String!, $password: String!) {
+      signin(email: $email, password: $password) {
+        status
+        statusMessage
+        data {
+          token
+          user {
+            id
+            email
+            first_name
+            last_name
+          }
+        }
+      }
+    }
+  `;
 
-  // Mock successful login
+  const response = await fetch(BASE_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ query, variables: { email, password } }),
+  });
+
+  const result = await response.json();
+
+  if (result.errors) {
+    throw new Error(result.errors[0].message);
+  }
+
+  // Return the nested data object containing user and token
   return {
-    data: {
-      user: {
-        id: "u1",
-        email,
-        first_name: "John",
-        last_name: "Doe",
-      },
-    },
+    data: result.data.signin.data,
   };
 };
 
 export const signupAPI = async ({ first_name, last_name, email, password }) => {
-  await new Promise((resolve) => setTimeout(resolve, 1000));
+  const query = `
+    mutation Signup($email: String!, $password: String!, $firstName: String!, $lastName: String!) {
+      signup(email: $email, password: $password, first_name: $firstName, last_name: $lastName) {
+        status
+        statusMessage
+        data {
+          token
+          user {
+            id
+            email
+            first_name
+            last_name
+          }
+        }
+      }
+    }
+  `;
+
+  const response = await fetch(BASE_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      query,
+      variables: {
+        email,
+        password,
+        firstName: first_name,
+        lastName: last_name,
+      },
+    }),
+  });
+
+  const result = await response.json();
+
+  if (result.errors) {
+    throw new Error(result.errors[0].message);
+  }
 
   return {
-    data: {
-      user: { id: "u" + Math.random(), first_name, last_name, email },
-    },
+    data: result.data.signup.data,
   };
 };
