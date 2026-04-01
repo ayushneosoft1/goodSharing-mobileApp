@@ -6,14 +6,20 @@ const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
+  const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const loadUser = async () => {
       try {
         const savedUser = await AsyncStorage.getItem("goodSharing_user");
+        const savedToken = await AsyncStorage.getItem("goodSharing_token");
         if (savedUser) {
           setUser(JSON.parse(savedUser));
+        }
+
+        if (savedToken) {
+          setToken(savedToken);
         }
       } finally {
         setLoading(false);
@@ -27,6 +33,8 @@ export function AuthProvider({ children }) {
   const login = async (email, password) => {
     try {
       const res = await signinAPI({ email, password });
+
+      setToken(res.data.token);
 
       if (res.data?.user) {
         // Save user in AsyncStorage and state
@@ -53,6 +61,8 @@ export function AuthProvider({ children }) {
     try {
       const res = await signupAPI({ first_name, last_name, email, password });
 
+      setToken(res.data.token);
+
       if (res.data?.user) {
         await AsyncStorage.setItem(
           "goodSharing_user",
@@ -60,6 +70,7 @@ export function AuthProvider({ children }) {
         );
         if (res.data.token) {
           await AsyncStorage.setItem("goodSharing_token", res.data.token);
+          setToken(res.data.token);
         }
         setUser(res.data.user);
       }

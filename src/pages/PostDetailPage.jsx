@@ -1,102 +1,98 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
   Image,
-  ScrollView,
+  ActivityIndicator,
   StyleSheet,
-  TouchableOpacity,
-  SafeAreaView,
+  ScrollView,
 } from "react-native";
-import { useRoute, useNavigation } from "@react-navigation/native";
-import { mockPosts } from "../data/mockPosts";
+import { useRoute } from "@react-navigation/native";
+import { BASE_URL } from "../api/config";
+import { useAuth } from "../contexts/AuthContext";
+import { getPostsAPI } from "../api/postService";
 
 export default function PostDetailPage() {
   const route = useRoute();
-  const navigation = useNavigation();
   const { id } = route.params;
-  const post = mockPosts.find((p) => p.id === id);
+  console.log("Received ID:", id); // Added console
 
-  if (!post) {
+  const [post, setPost] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  const fetchPostDetail = async () => {
+    const query = `
+    query GetPost($id: ID!) {
+      post(id: $id) {
+        id
+        title
+        description
+        imageUrl
+        location
+        createdAt
+        user {
+          id
+          first_name
+          last_name
+        }
+      }
+    }
+  `;
+
+    try {
+      const response = await fetch(BASE_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          query,
+          variables: { id },
+        }),
+      });
+
+      const result = await response.json();
+      setPost(result?.data?.post || null);
+    } catch (err) {
+      console.log(err);
+    }
+
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchPostDetail();
+  }, []);
+
+  // ✅ Loader UI
+  if (loading) {
     return (
-      <View style={styles.errorContainer}>
-        <Text style={styles.errorTitle}>Post Not Found</Text>
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={styles.btnPrimary}
-        >
-          <Text style={styles.btnText}>Go Back</Text>
-        </TouchableOpacity>
+      <View style={styles.center}>
+        <ActivityIndicator size="large" />
+        <Text>Loading post...</Text>
       </View>
     );
   }
 
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
+  // ✅ Fallback UI
+  if (!post) {
+    return (
+      <View style={styles.center}>
+        <Text>Post not found 😕</Text>
+      </View>
+    );
+  }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView>
-        <Image source={{ uri: post.imageUrl }} style={styles.detailImage} />
+    <ScrollView style={styles.container}>
+      <Image source={{ uri: post.imageUrl }} style={styles.image} />
 
-        <View style={styles.detailBody}>
-          <View style={styles.titleSection}>
-            <Text style={styles.detailTitle}>{post.title}</Text>
-            <View style={styles.detailBadge}>
-              <Text style={styles.badgeText}>{post.category}</Text>
-            </View>
-          </View>
+      <Text style={styles.title}>{post.title}</Text>
+      <Text style={styles.desc}>{post.description}</Text>
 
-          <View style={styles.infoCard}>
-            <Text style={styles.sectionTitle}>Shared by</Text>
-            <View style={styles.ownerInfo}>
-              <View style={styles.ownerAvatar}>
-                <Text style={styles.avatarText}>
-                  {post.owner.name.charAt(0)}
-                </Text>
-              </View>
-              <View>
-                <Text style={styles.ownerName}>{post.owner.name}</Text>
-                <Text style={styles.infoMeta}>📍 {post.location}</Text>
-                <Text style={styles.infoMeta}>
-                  🕒 {formatDate(post.createdAt)}
-                </Text>
-              </View>
-            </View>
-          </View>
-
-          <View style={styles.infoCard}>
-            <Text style={styles.sectionTitle}>Description</Text>
-            <Text style={styles.detailDescription}>{post.description}</Text>
-          </View>
-
-          <View style={styles.actionButtons}>
-            <TouchableOpacity style={styles.btnPrimary}>
-              <Text style={styles.btnText}>💬 Message Owner</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.btnSecondary}>
-              <Text style={styles.btnSecondaryText}>❤️ Show Interest</Text>
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.tipCard}>
-            <Text style={styles.tipText}>
-              💡 Tip: When you message the owner, be polite and explain why
-              you're interested in this item. Arrange a safe meeting place for
-              pickup.
-            </Text>
-          </View>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+      <Text style={styles.meta}>📍 {post.location}</Text>
+      <Text style={styles.meta}>
+        👤 {post.user.first_name} {post.user.last_name}
+      </Text>
+    </ScrollView>
   );
 }
 

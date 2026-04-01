@@ -33,8 +33,11 @@ export default function LoginPage() {
     const res = await login(loginEmail, loginPassword);
 
     if (res.error) {
+      // login failed
       setError(res.error);
     } else if (res.data?.user) {
+      // login succeded
+
       console.log("Login successful:", res.data.user);
       // AuthContext will automatically handle navigation via state change
     } else {
