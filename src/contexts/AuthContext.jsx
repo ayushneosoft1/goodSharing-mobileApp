@@ -14,67 +14,86 @@ export function AuthProvider({ children }) {
       try {
         const savedUser = await AsyncStorage.getItem("goodSharing_user");
         const savedToken = await AsyncStorage.getItem("goodSharing_token");
+
         if (savedUser) {
-          setUser(JSON.parse(savedUser));
+          try {
+            setUser(JSON.parse(savedUser));
+          } catch (e) {
+            console.log("User parse error", e);
+            setUser(null);
+          }
         }
 
         if (savedToken) {
           setToken(savedToken);
         }
+      } catch (e) {
+        console.log("Load user error", e);
       } finally {
         setLoading(false);
       }
     };
+
     loadUser();
   }, []);
 
-  // LOGIN using real API
-
+  // LOGIN
   const login = async (email, password) => {
     try {
       const res = await signinAPI({ email, password });
 
-      setToken(res.data.token);
+      if (!res || res.error) {
+        return res || { error: "No response from server" };
+      }
+
+      if (res.data?.token) {
+        setToken(res.data.token);
+        await AsyncStorage.setItem("goodSharing_token", res.data.token);
+      }
 
       if (res.data?.user) {
-        // Save user in AsyncStorage and state
         await AsyncStorage.setItem(
           "goodSharing_user",
           JSON.stringify(res.data.user),
         );
-        if (res.data.token) {
-          await AsyncStorage.setItem("goodSharing_token", res.data.token);
-        }
         setUser(res.data.user);
       }
 
-      return res; // return API response for handling success/error in page
+      return res;
     } catch (error) {
       console.error("Login failed:", error);
       return { error: error.message || "Login failed" };
     }
   };
 
-  // SIGNUP using real API
-
+  // SIGNUP
   const signup = async (first_name, last_name, email, password) => {
     try {
-      const res = await signupAPI({ first_name, last_name, email, password });
+      const res = await signupAPI({
+        first_name,
+        last_name,
+        email,
+        password,
+      });
 
-      setToken(res.data.token);
+      if (!res || res.error) {
+        return res || { error: "No response from server" };
+      }
+
+      if (res.data?.token) {
+        setToken(res.data.token);
+        await AsyncStorage.setItem("goodSharing_token", res.data.token);
+      }
 
       if (res.data?.user) {
         await AsyncStorage.setItem(
           "goodSharing_user",
           JSON.stringify(res.data.user),
         );
-        if (res.data.token) {
-          await AsyncStorage.setItem("goodSharing_token", res.data.token);
-          setToken(res.data.token);
-        }
         setUser(res.data.user);
       }
-      return res; // return API response for handling success / error in page
+
+      return res;
     } catch (error) {
       console.error("Signup failed:", error);
       return { error: error.message || "Signup failed" };
@@ -82,21 +101,22 @@ export function AuthProvider({ children }) {
   };
 
   // LOGOUT
-
   const logout = async () => {
     await AsyncStorage.removeItem("goodSharing_user");
     await AsyncStorage.removeItem("goodSharing_token");
     setUser(null);
+    setToken(null);
   };
 
   return (
     <AuthContext.Provider
       value={{
         user,
+        token,
         login,
         signup,
         logout,
-        isAuthenticated: !!user,
+        isAuthenticated: !!token, // ✅ FIXED
         loading,
       }}
     >

@@ -11,6 +11,10 @@ export const createPostAPI = async ({
   imageUrl,
   token,
 }) => {
+  if (!token) {
+    return { error: "Unauthorized - Token missing" };
+  }
+
   try {
     const query = `
       mutation CreatePost(
@@ -81,6 +85,9 @@ export const createPostAPI = async ({
  */
 
 export const getPostsAPI = async (token) => {
+  if (!token) {
+    return { error: "Unauthorized - Token missing" };
+  }
   const query = `
     query {
       posts {

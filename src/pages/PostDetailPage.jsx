@@ -10,39 +10,48 @@ import {
 import { useRoute } from "@react-navigation/native";
 import { BASE_URL } from "../api/config";
 import { useAuth } from "../contexts/AuthContext";
-import { getPostsAPI } from "../api/postService";
 
 export default function PostDetailPage() {
   const route = useRoute();
   const { id } = route.params;
-  console.log("Received ID:", id); // Added console
+
+  const { token } = useAuth(); // ✅ FIX 1: token added
 
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const fetchPostDetail = async () => {
+    if (!token) {
+      console.log("No token found");
+      setLoading(false);
+      return;
+    }
+
     const query = `
-    query GetPost($id: ID!) {
-      post(id: $id) {
-        id
-        title
-        description
-        imageUrl
-        location
-        createdAt
-        user {
+      query GetPost($id: ID!) {
+        post(id: $id) {
           id
-          first_name
-          last_name
+          title
+          description
+          imageUrl
+          location
+          createdAt
+          owner {   // ✅ FIX 2: user → owner
+            id
+            first_name
+            last_name
+          }
         }
       }
-    }
-  `;
+    `;
 
     try {
       const response = await fetch(BASE_URL, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({
           query,
           variables: { id },
@@ -50,17 +59,24 @@ export default function PostDetailPage() {
       });
 
       const result = await response.json();
+
+      if (result.errors) {
+        console.log("GraphQL Error:", result.errors);
+      }
+
       setPost(result?.data?.post || null);
     } catch (err) {
-      console.log(err);
+      console.log("Fetch Error:", err);
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   useEffect(() => {
-    fetchPostDetail();
-  }, []);
+    if (token) {
+      fetchPostDetail();
+    }
+  }, [token]);
 
   // ✅ Loader UI
   if (loading) {
@@ -83,14 +99,19 @@ export default function PostDetailPage() {
 
   return (
     <ScrollView style={styles.container}>
-      <Image source={{ uri: post.imageUrl }} style={styles.image} />
+      <Image
+        source={{ uri: post.imageUrl || "https://via.placeholder.com/300" }}
+        style={styles.image}
+      />
 
       <Text style={styles.title}>{post.title}</Text>
       <Text style={styles.desc}>{post.description}</Text>
 
-      <Text style={styles.meta}>📍 {post.location}</Text>
+      <Text style={styles.meta}>📍 {post.location || "Unknown"}</Text>
+
+      {/* ✅ FIX 3: owner used safely */}
       <Text style={styles.meta}>
-        👤 {post.user.first_name} {post.user.last_name}
+        👤 {post.owner?.first_name || "User"} {post.owner?.last_name || ""}
       </Text>
     </ScrollView>
   );
@@ -98,97 +119,35 @@ export default function PostDetailPage() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#fff" },
-  errorContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
+
+  image: {
+    width: "100%",
+    height: 250,
   },
-  errorTitle: {
+
+  title: {
     fontSize: 20,
     fontWeight: "bold",
-    color: "#0c4a6e",
-    marginBottom: 20,
+    margin: 12,
   },
-  detailImage: { width: "100%", height: 300 },
-  detailBody: {
-    padding: 20,
-    marginTop: -20,
-    backgroundColor: "#fff",
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+
+  desc: {
+    fontSize: 14,
+    color: "#555",
+    marginHorizontal: 12,
+    marginBottom: 10,
   },
-  titleSection: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    marginBottom: 20,
+
+  meta: {
+    fontSize: 13,
+    color: "#777",
+    marginHorizontal: 12,
+    marginBottom: 6,
   },
-  detailTitle: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#0c4a6e",
+
+  center: {
     flex: 1,
-    marginRight: 10,
-  },
-  detailBadge: {
-    backgroundColor: "#e0f2fe",
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 15,
-  },
-  badgeText: { color: "#0ea5e9", fontWeight: "bold", fontSize: 12 },
-  infoCard: {
-    backgroundColor: "#f8fafc",
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: "#f1f5f9",
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#0c4a6e",
-    marginBottom: 12,
-  },
-  ownerInfo: { flexDirection: "row", alignItems: "center" },
-  ownerAvatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: "#0ea5e9",
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 12,
   },
-  avatarText: { color: "#fff", fontWeight: "bold" },
-  ownerName: { fontSize: 16, fontWeight: "bold", color: "#0c4a6e" },
-  infoMeta: { fontSize: 13, color: "#64748b", marginTop: 2 },
-  detailDescription: { fontSize: 15, color: "#334155", lineHeight: 22 },
-  actionButtons: { gap: 12, marginBottom: 20 },
-  btnPrimary: {
-    backgroundColor: "#0ea5e9",
-    padding: 16,
-    borderRadius: 8,
-    alignItems: "center",
-  },
-  btnSecondary: {
-    backgroundColor: "#fff",
-    padding: 16,
-    borderRadius: 8,
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#0ea5e9",
-  },
-  btnText: { color: "#fff", fontWeight: "bold", fontSize: 16 },
-  btnSecondaryText: { color: "#0ea5e9", fontWeight: "bold", fontSize: 16 },
-  tipCard: {
-    backgroundColor: "#fffbeb",
-    padding: 16,
-    borderRadius: 12,
-    borderLeftWidth: 4,
-    borderLeftColor: "#f59e0b",
-  },
-  tipText: { fontSize: 13, color: "#92400e", lineHeight: 18 },
 });

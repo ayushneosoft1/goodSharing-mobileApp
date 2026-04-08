@@ -7,8 +7,11 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { createPostAPI } from "../services/postService"; // ✅ your postService.js
+import { useAuth } from "../contexts/AuthContext";
 
 const CreatePostScreen = ({ navigation }) => {
+  const { token } = useAuth(); // 🔐 get user token
+
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("");
@@ -23,11 +26,10 @@ const CreatePostScreen = ({ navigation }) => {
 
     setLoading(true);
 
-    const token = await AsyncStorage.getItem("token"); // 🔐 get user token
-
     const res = await createPostAPI({
       title,
       description,
+      category,
       location,
       imageUrl: "", // can improve later with image picker
       token, // pass token for authentication

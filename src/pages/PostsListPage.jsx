@@ -16,7 +16,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { getPostsAPI } from "../api/postService";
 
 export default function PostsListPage() {
-  const { user, logout } = useAuth();
+  const { user, logout, token } = useAuth();
   const navigation = useNavigation();
 
   const [menuOpen, setMenuOpen] = useState(false);
@@ -26,28 +26,18 @@ export default function PostsListPage() {
   const formatDate = (dateString) => {
     if (!dateString) return "";
     const date = new Date(dateString);
-    const now = new Date();
-    const diffInHours = Math.floor((now - date) / (1000 * 60 * 60));
-
-    if (diffInHours < 1) return "Just now";
-    if (diffInHours < 24) return `${diffInHours}h ago`;
-
-    const diffInDays = Math.floor(diffInHours / 24);
-    if (diffInDays === 1) return "Yesterday";
-    if (diffInDays < 7) return `${diffInDays} days ago`;
-
     return date.toLocaleDateString();
   };
 
   const fetchPosts = async () => {
     setLoading(true);
     try {
-      const res = await getPostsAPI();
+      const res = await getPostsAPI(token);
       if (!res.error) {
         setPosts(res.data || []);
       }
     } catch (err) {
-      console.log("Error fetching posts");
+      console.log("Error fetching posts", err);
     } finally {
       setLoading(false);
     }
@@ -77,7 +67,7 @@ export default function PostsListPage() {
 
           <View style={styles.badge}>
             <Text style={styles.badgeText}>
-              {item.user?.first_name || "User"}
+              {item.owner?.first_name || "User"}
             </Text>
           </View>
         </View>
@@ -114,19 +104,12 @@ export default function PostsListPage() {
         <View style={{ width: 30 }} />
       </View>
 
-      {/* ✅ Drawer */}
-      <Modal
-        animationType="fade"
-        transparent={true}
-        visible={menuOpen}
-        onRequestClose={() => setMenuOpen(false)}
-      >
+      {/* Drawer */}
+      <Modal transparent visible={menuOpen} animationType="fade">
         <TouchableOpacity
           style={styles.drawerOverlay}
-          activeOpacity={1}
           onPress={() => setMenuOpen(false)}
         >
-          {/* Prevent closing when clicking inside drawer */}
           <TouchableOpacity activeOpacity={1}>
             <View style={styles.drawer}>
               <Text style={styles.drawerLogo}>📦 goodSharing</Text>
@@ -135,7 +118,6 @@ export default function PostsListPage() {
                 {user?.first_name} {user?.last_name}
               </Text>
 
-              {/* ✅ My Posts Button */}
               <TouchableOpacity
                 style={{ marginTop: 20 }}
                 onPress={() => {
@@ -143,10 +125,9 @@ export default function PostsListPage() {
                   navigation.navigate("MyPosts");
                 }}
               >
-                <Text style={{ fontSize: 16, color: "#0ea5e9" }}>My Posts</Text>
+                <Text style={{ color: "#0ea5e9" }}>My Posts</Text>
               </TouchableOpacity>
 
-              {/* Logout */}
               <TouchableOpacity onPress={logout} style={styles.logoutBtn}>
                 <Text style={styles.logoutBtnText}>Logout</Text>
               </TouchableOpacity>
@@ -155,20 +136,14 @@ export default function PostsListPage() {
         </TouchableOpacity>
       </Modal>
 
-      {/* Posts List */}
+      {/* Posts */}
       <FlatList
         data={posts}
-        keyExtractor={(item) => item.id.toString()}
+        keyExtractor={(item, index) =>
+          item?.id ? item.id.toString() : index.toString()
+        }
         renderItem={renderPost}
         contentContainerStyle={{ padding: 16 }}
-        ListHeaderComponent={
-          <View style={styles.pageHeader}>
-            <Text style={styles.pageTitle}>Available Items</Text>
-            <Text style={styles.pageSubtitle}>
-              Find items shared by your community
-            </Text>
-          </View>
-        }
       />
 
       {/* FAB */}
@@ -181,3 +156,86 @@ export default function PostsListPage() {
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: "#fff" },
+
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    padding: 16,
+  },
+
+  menuIcon: { fontSize: 22 },
+
+  headerTitle: { fontSize: 18, fontWeight: "bold" },
+
+  postCard: {
+    marginBottom: 16,
+    backgroundColor: "#f9f9f9",
+    borderRadius: 12,
+    overflow: "hidden",
+  },
+
+  postImage: { width: "100%", height: 180 },
+
+  postContent: { padding: 12 },
+
+  postHeaderRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+
+  postTitle: { fontSize: 16, fontWeight: "bold" },
+
+  badge: {
+    backgroundColor: "#0ea5e9",
+    paddingHorizontal: 8,
+    borderRadius: 8,
+  },
+
+  badgeText: { color: "#fff", fontSize: 12 },
+
+  postDescription: { color: "#555", marginTop: 4 },
+
+  postMeta: { marginTop: 6 },
+
+  metaItem: { fontSize: 12, color: "#777" },
+
+  center: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  fab: {
+    position: "absolute",
+    bottom: 20,
+    right: 20,
+    backgroundColor: "#0ea5e9",
+    padding: 16,
+    borderRadius: 50,
+  },
+
+  fabText: { color: "#fff", fontSize: 20 },
+
+  drawerOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.3)",
+  },
+
+  drawer: {
+    width: 250,
+    backgroundColor: "#fff",
+    padding: 20,
+    height: "100%",
+  },
+
+  drawerLogo: { fontSize: 18, fontWeight: "bold" },
+
+  userName: { marginTop: 10 },
+
+  logoutBtn: { marginTop: 20 },
+
+  logoutBtnText: { color: "red" },
+});

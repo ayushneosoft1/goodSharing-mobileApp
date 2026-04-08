@@ -36,30 +36,37 @@ export const signinAPI = async ({ email, password }) => {
     });
 
     const result = await response.json();
+    console.log("SIGNIN FULL RESPONSE:", JSON.stringify(result, null, 2));
 
-    // Add this
-    const signinResult = result.data?.signin;
-
-    // Print only signin data
-    console.log(" Signin Data:", signinResult?.data);
-
-    // Check success first
-
-    if (signinResult?.status == "SUCCESS") {
-      return { data: signinResult.data };
+    // GraphQL errors
+    if (result.errors && result.errors.length > 0) {
+      return { error: result.errors[0].message };
     }
 
-    //  Only throw error if truly failed
-    if (result.errors?.length) {
-      throw new Error(result.errors[0].message);
+    // Safe access
+    const signinResult = result?.data?.signin;
+
+    if (!signinResult) {
+      return {
+        error:
+          result?.errors?.[0]?.message || "Signin failed (no data returned)",
+      };
     }
 
-    throw new Error(signinResult?.statusMessage || "Signin failed");
+    // Business logic error
+
+    if (signinResult.status !== "SUCCESS") {
+      return {
+        error: signinResult.statusMessage || "Signin failed",
+      };
+    }
+
+    // Success
+
+    return { data: signinResult.data };
   } catch (err) {
-    // Add this
-    console.log("API FETCH ERROR", err.message);
-
-    throw err;
+    console.log("SIGNIN API ERROR:", err.message);
+    return { error: err.message || "Signin failed" };
   }
 };
 
@@ -68,8 +75,8 @@ export const signinAPI = async ({ email, password }) => {
  */
 export const signupAPI = async ({ first_name, last_name, email, password }) => {
   const query = `
-    mutation Signup($email: String!, $password: String!, $firstName: String!, $lastName: String!) {
-      signup(email: $email, password: $password, first_name: $firstName, last_name: $lastName) {
+    mutation Signup($email: String!, $password: String!, $first_name: String!, $last_name: String!) {
+      signup(email: $email, password: $password, first_name: $first_name, last_name: $last_name) {
         status
         statusMessage
         data {
@@ -85,34 +92,50 @@ export const signupAPI = async ({ first_name, last_name, email, password }) => {
     }
   `;
 
-  const response = await fetch(BASE_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      query,
-      variables: {
-        email,
-        password,
-        firstName: first_name,
-        lastName: last_name,
-      },
-    }),
-  });
+  try {
+    const response = await fetch(BASE_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        query,
+        variables: {
+          email,
+          password,
+          first_name,
+          last_name,
+        },
+      }),
+    });
 
-  const result = await response.json();
+    const result = await response.json();
+    console.log("SIGNUP FULL RESPONSE:", JSON.stringify(result, null, 2));
 
-  // GraphQL-level errors
-  if (result.errors && result.errors.length > 0) {
-    throw new Error(result.errors[0].message);
+    // Handle GraphQL-level errors first
+    if (result.errors && result.errors.length > 0) {
+      return { error: result.errors[0].message };
+    }
+
+    // Safe Access (Fix Here)
+
+    const signupResult = result?.data?.signup;
+
+    if (!signupResult) {
+      return {
+        error:
+          result?.errors?.[0]?.message || "Signup failed no data returned)",
+      };
+    }
+
+    // Business logic error
+    if (signupResult.status !== "SUCCESS") {
+      return { error: signupResult.statusMessage || "Signup failed" };
+    }
+
+    // Success
+
+    return { data: signupResult.data };
+  } catch (err) {
+    console.log("SIGNUP API ERROR:", err.message);
+    return { error: err.message || "Signup failed" };
   }
-
-  const signupResult = result.data.signup;
-
-  // Application-level errors
-  if (signupResult.status !== "SUCCESS") {
-    throw new Error(signupResult.statusMessage || "Signup failed");
-  }
-
-  // Return nested data (user and token)
-  return { data: signupResult.data };
 };
