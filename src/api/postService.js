@@ -3,14 +3,8 @@ import { BASE_URL } from "../api/config";
 /**
  * Create a new post
  */
-export const createPostAPI = async ({
-  title,
-  description,
-  category,
-  location,
-  imageUrl,
-  token,
-}) => {
+
+export const createPostAPI = async (data, token) => {
   if (!token) {
     return { error: "Unauthorized - Token missing" };
   }
@@ -19,31 +13,25 @@ export const createPostAPI = async ({
     const query = `
       mutation CreatePost(
         $title: String!,
+        $category: PostCategory!,
         $description: String!,
-        $category: String!,
-        $location: String!,
-        $imageUrl: String
+        $imageUrl: String,
+        $location: String
       ) {
         createPost(
-          input: {
-            title: $title,
-            description: $description,
-            category: $category,
-            location: $location,
-            imageUrl: $imageUrl
-          }
+          title: $title,
+          category: $category,
+          description: $description,
+          imageUrl: $imageUrl,
+          location: $location
         ) {
-          status
-          statusMessage
-          data {
-            id
-            title
-            description
-            category
-            location
-            imageUrl
-            createdAt
-          }
+          id
+          title
+          description
+          category
+          location
+          imageUrl
+          createdAt
         }
       }
     `;
@@ -52,31 +40,21 @@ export const createPostAPI = async ({
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${token}`, // ✅ FIXED
       },
       body: JSON.stringify({
         query,
-        variables: { title, description, category, location, imageUrl },
+        variables: data,
       }),
     });
 
     const result = await response.json();
 
-    if (result.errors?.length) {
-      return { error: result.errors[0].message };
-    }
+    console.log("GRAPHQL RESULT:", result); // 👈 debug
 
-    const createPostResult = result.data.createPost;
-
-    if (createPostResult.status !== "SUCCESS") {
-      return {
-        error: createPostResult.statusMessage || "Failed to create post",
-      };
-    }
-
-    return { data: createPostResult.data };
+    return result;
   } catch (err) {
-    return { error: err.message || "Network error" };
+    return { error: err.message };
   }
 };
 
