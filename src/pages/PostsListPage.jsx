@@ -14,6 +14,8 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import { useAuth } from "../contexts/AuthContext";
 import { getPostsAPI } from "../api/postService";
+import { useFocusEffect } from "@react-navigation/native";
+import { useCallback } from "react";
 
 export default function PostsListPage() {
   const { user, logout, token } = useAuth();
@@ -43,9 +45,11 @@ export default function PostsListPage() {
     }
   };
 
-  useEffect(() => {
-    fetchPosts();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      fetchPosts();
+    }, []),
+  );
 
   const renderPost = ({ item }) => (
     <TouchableOpacity

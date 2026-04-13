@@ -17,39 +17,55 @@ import { categories } from "../data/mockPosts";
 
 export default function CreatePostPage() {
   const navigation = useNavigation();
-  const { user, token } = useAuth();
+  const { token } = useAuth();
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("");
   const [location, setLocation] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async () => {
-    if (!title || !description || !category || !location) {
-      Alert.alert("Error", "Please fill in all required fields");
+  // ✅ SINGLE CLEAN FUNCTION
+  const handleCreatePost = async () => {
+    if (!token) {
+      Alert.alert("Error", "User not authenticated yet. Please wait.");
       return;
     }
 
-    setLoading(true);
+    if (!title || !description || !category || !location) {
+      Alert.alert("Error", "Please fill all required fields");
+      return;
+    }
 
-    const res = await createPostAPI({
-      title,
-      description,
-      category,
-      location,
-      imageUrl: "", // optional, can integrate image picker later
-      token, // Auth token from context
-    });
+    try {
+      setLoading(true);
 
-    setLoading(false);
+      const payload = {
+        title,
+        description,
+        category,
+        location,
+        imageUrl, // ✅ correct (no hardcoded "")
+      };
 
-    if (res.error) {
-      Alert.alert("Error", res.error);
-    } else {
-      Alert.alert("Success", "Post created successfully!", [
-        { text: "OK", onPress: () => navigation.navigate("PostsList") },
-      ]);
+      const res = await createPostAPI(payload, token);
+
+      if (res?.data?.createPost && !res?.errors) {
+        Alert.alert("Success", "Post created successfully!", [
+          { text: "OK", onPress: () => navigation.goBack() },
+        ]);
+      } else {
+        Alert.alert(
+          "Error",
+          res?.errors?.[0]?.message || "Post creation failed",
+        );
+      }
+    } catch (err) {
+      console.log("Create Post Error:", err);
+      Alert.alert("Error", "Failed to create post");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -59,58 +75,71 @@ export default function CreatePostPage() {
       <Text style={styles.subHeader}>Community sharing made easy</Text>
 
       <View style={styles.form}>
+        {/* Title */}
         <Text style={styles.label}>Title *</Text>
         <TextInput
           style={styles.input}
-          placeholder="e.g., Children's Books Collection"
+          placeholder="e.g., Books, Clothes, etc."
           value={title}
           onChangeText={setTitle}
         />
 
+        {/* Category */}
         <Text style={styles.label}>Category *</Text>
         <View style={styles.categories}>
           {categories.map((cat) => (
             <TouchableOpacity
-              key={cat}
+              key={cat.value}
               style={[
                 styles.categoryBadge,
-                category === cat && styles.activeCategory,
+                category === cat.value && styles.activeCategory,
               ]}
-              onPress={() => setCategory(cat)}
+              onPress={() => setCategory(cat.value)}
             >
               <Text
                 style={[
                   styles.categoryText,
-                  category === cat && styles.activeCategoryText,
+                  category === cat.value && styles.activeCategoryText,
                 ]}
               >
-                {cat}
+                {cat.label}
               </Text>
             </TouchableOpacity>
           ))}
         </View>
 
+        {/* Description */}
         <Text style={styles.label}>Description *</Text>
         <TextInput
           style={[styles.input, styles.textArea]}
-          placeholder="Describe the item..."
+          placeholder="Describe your item..."
           value={description}
           onChangeText={setDescription}
           multiline
-          numberOfLines={4}
         />
 
+        {/* Image URL */}
+        <Text style={styles.label}>Image URL</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Paste image link"
+          value={imageUrl}
+          onChangeText={setImageUrl}
+        />
+
+        {/* Location */}
         <Text style={styles.label}>Location *</Text>
         <TextInput
           style={styles.input}
-          placeholder="e.g., Downtown, Main Street"
+          placeholder="e.g., Anjar, Gujarat"
           value={location}
           onChangeText={setLocation}
         />
 
+        {/* Submit Button */}
         <TouchableOpacity
           style={styles.submitBtn}
-          onPress={handleSubmit}
+          onPress={handleCreatePost}
           disabled={loading}
         >
           {loading ? (
@@ -129,17 +158,20 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: "#f8fafc",
   },
+
   header: {
     fontSize: 24,
     fontWeight: "bold",
     color: "#0c4a6e",
     marginBottom: 4,
   },
+
   subHeader: {
     fontSize: 14,
     color: "#64748b",
     marginBottom: 20,
   },
+
   form: {
     backgroundColor: "#fff",
     borderRadius: 12,
@@ -147,6 +179,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#bae6fd",
   },
+
   label: {
     fontSize: 14,
     fontWeight: "600",
@@ -154,6 +187,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     marginTop: 10,
   },
+
   input: {
     borderWidth: 1,
     borderColor: "#bae6fd",
@@ -162,16 +196,19 @@ const styles = StyleSheet.create({
     fontSize: 16,
     backgroundColor: "#fdfdfd",
   },
+
   textArea: {
     height: 100,
     textAlignVertical: "top",
   },
+
   categories: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 8,
     marginBottom: 10,
   },
+
   categoryBadge: {
     paddingHorizontal: 12,
     paddingVertical: 6,
@@ -179,9 +216,21 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#0ea5e9",
   },
-  activeCategory: { backgroundColor: "#0ea5e9" },
-  categoryText: { color: "#0ea5e9", fontSize: 12, fontWeight: "600" },
-  activeCategoryText: { color: "#fff" },
+
+  activeCategory: {
+    backgroundColor: "#0ea5e9",
+  },
+
+  categoryText: {
+    color: "#0ea5e9",
+    fontSize: 12,
+    fontWeight: "600",
+  },
+
+  activeCategoryText: {
+    color: "#fff",
+  },
+
   submitBtn: {
     marginTop: 20,
     padding: 16,
@@ -189,5 +238,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#0ea5e9",
   },
-  submitBtnText: { color: "#fff", fontWeight: "bold" },
+
+  submitBtnText: {
+    color: "#fff",
+    fontWeight: "bold",
+  },
 });
