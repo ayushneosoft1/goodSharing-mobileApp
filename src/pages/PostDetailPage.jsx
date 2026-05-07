@@ -15,28 +15,29 @@ export default function PostDetailPage() {
   const route = useRoute();
   const { id } = route.params;
 
-  const { token } = useAuth(); // ✅ FIX 1: token added
+  const { token } = useAuth();
 
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const fetchPostDetail = async () => {
-    if (!token) {
-      console.log("No token found");
+    if (!token || !id) {
       setLoading(false);
       return;
     }
 
+    console.log("POST ID SENT:", id);
+
     const query = `
-      query GetPost($id: ID!) {
-        post(id: $id) {
+      query GetPostDetails($postId: ID!) {
+        getPostDetails(postId: $postId) {
           id
           title
           description
           imageUrl
           location
           createdAt
-          owner {   // ✅ FIX 2: user → owner
+          owner {
             id
             first_name
             last_name
@@ -54,31 +55,33 @@ export default function PostDetailPage() {
         },
         body: JSON.stringify({
           query,
-          variables: { id },
+          variables: { postId: String(id) }, // ✅ IMPORTANT
         }),
       });
 
       const result = await response.json();
 
+      console.log("API RESULT:", result);
+
       if (result.errors) {
         console.log("GraphQL Error:", result.errors);
+        setPost(null);
+      } else {
+        setPost(result?.data?.getPostDetails || null);
       }
-
-      setPost(result?.data?.post || null);
     } catch (err) {
       console.log("Fetch Error:", err);
+      setPost(null);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    if (token) {
-      fetchPostDetail();
-    }
-  }, [token]);
+    fetchPostDetail();
+  }, [id, token]);
 
-  // ✅ Loader UI
+  // ✅ Loader
   if (loading) {
     return (
       <View style={styles.center}>
@@ -88,7 +91,7 @@ export default function PostDetailPage() {
     );
   }
 
-  // ✅ Fallback UI
+  // ✅ Empty state
   if (!post) {
     return (
       <View style={styles.center}>
@@ -97,6 +100,7 @@ export default function PostDetailPage() {
     );
   }
 
+  // ✅ UI
   return (
     <ScrollView style={styles.container}>
       <Image
@@ -109,7 +113,6 @@ export default function PostDetailPage() {
 
       <Text style={styles.meta}>📍 {post.location || "Unknown"}</Text>
 
-      {/* ✅ FIX 3: owner used safely */}
       <Text style={styles.meta}>
         👤 {post.owner?.first_name || "User"} {post.owner?.last_name || ""}
       </Text>

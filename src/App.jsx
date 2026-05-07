@@ -5,6 +5,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { View, ActivityIndicator } from "react-native";
 import { registerRootComponent } from "expo";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import LoginPage from "./pages/LoginPage";
 import PostsListPage from "./pages/PostsListPage";
@@ -65,7 +66,22 @@ function Navigation() {
           <Stack.Screen
             name="MyPosts"
             component={MyPostsPage}
-            options={{ headerShown: true, title: "My Posts" }}
+            options={{
+              headerShown: true,
+              title: "My Posts",
+              headerTitleAlign: "center",
+
+              headerStyle: {
+                backgroundColor: "#fff",
+              },
+
+              headerTitleStyle: {
+                fontSize: 18,
+                fontWeight: "bold",
+              },
+
+              headerTintColor: "#0ea5e9",
+            }}
           />
         </>
       )}
@@ -75,11 +91,13 @@ function Navigation() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <NavigationContainer>
-        <Navigation />
-      </NavigationContainer>
-    </AuthProvider>
+    <SafeAreaProvider>
+      <AuthProvider>
+        <NavigationContainer>
+          <Navigation />
+        </NavigationContainer>
+      </AuthProvider>
+    </SafeAreaProvider>
   );
 }
 

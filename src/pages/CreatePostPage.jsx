@@ -46,7 +46,7 @@ export default function CreatePostPage() {
         description,
         category,
         location,
-        imageUrl, // ✅ correct (no hardcoded "")
+        imageUrl,
       };
 
       const res = await createPostAPI(payload, token);

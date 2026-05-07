@@ -116,7 +116,7 @@ export function AuthProvider({ children }) {
         login,
         signup,
         logout,
-        isAuthenticated: !!token, // ✅ FIXED
+        isAuthenticated: !!token,
         loading,
       }}
     >

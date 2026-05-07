@@ -1,5 +1,5 @@
 // ./pages/PostsListPage.jsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -11,13 +11,13 @@ import {
   ActivityIndicator,
   FlatList,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { useAuth } from "../contexts/AuthContext";
 import { getPostsAPI } from "../api/postService";
-import { useFocusEffect } from "@react-navigation/native";
-import { useCallback } from "react";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function PostsListPage() {
+  const insets = useSafeAreaInsets();
   const { user, logout, token } = useAuth();
   const navigation = useNavigation();
 
@@ -27,8 +27,7 @@ export default function PostsListPage() {
 
   const formatDate = (dateString) => {
     if (!dateString) return "";
-    const date = new Date(dateString);
-    return date.toLocaleDateString();
+    return new Date(dateString).toLocaleDateString();
   };
 
   const fetchPosts = async () => {
@@ -45,10 +44,11 @@ export default function PostsListPage() {
     }
   };
 
+  // ✅ Refresh when screen focuses
   useFocusEffect(
     useCallback(() => {
       fetchPosts();
-    }, []),
+    }, [token]),
   );
 
   const renderPost = ({ item }) => (
@@ -71,7 +71,7 @@ export default function PostsListPage() {
 
           <View style={styles.badge}>
             <Text style={styles.badgeText}>
-              {item.owner?.first_name || "User"}
+              {item.owner?.first_name || item.userName || "User"}
             </Text>
           </View>
         </View>
@@ -88,6 +88,7 @@ export default function PostsListPage() {
     </TouchableOpacity>
   );
 
+  // ✅ Loader
   if (loading) {
     return (
       <View style={styles.center}>
@@ -99,7 +100,7 @@ export default function PostsListPage() {
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top }]}>
         <TouchableOpacity onPress={() => setMenuOpen(true)}>
           <Text style={styles.menuIcon}>☰</Text>
         </TouchableOpacity>
@@ -110,44 +111,53 @@ export default function PostsListPage() {
 
       {/* Drawer */}
       <Modal transparent visible={menuOpen} animationType="fade">
-        <TouchableOpacity
-          style={styles.drawerOverlay}
-          onPress={() => setMenuOpen(false)}
-        >
-          <TouchableOpacity activeOpacity={1}>
-            <View style={styles.drawer}>
-              <Text style={styles.drawerLogo}>📦 goodSharing</Text>
+        <View style={styles.drawerOverlay}>
+          {/* Drawer (LEFT) */}
+          <View style={styles.drawer}>
+            <Text style={styles.drawerLogo}>📦 goodSharing</Text>
 
-              <Text style={styles.userName}>
-                {user?.first_name} {user?.last_name}
-              </Text>
+            <Text style={styles.userName}>
+              {user?.first_name} {user?.last_name}
+            </Text>
 
-              <TouchableOpacity
-                style={{ marginTop: 20 }}
-                onPress={() => {
-                  setMenuOpen(false);
-                  navigation.navigate("MyPosts");
-                }}
-              >
-                <Text style={{ color: "#0ea5e9" }}>My Posts</Text>
-              </TouchableOpacity>
+            <TouchableOpacity
+              style={{ marginTop: 20 }}
+              onPress={() => {
+                setMenuOpen(false);
+                navigation.navigate("MyPosts");
+              }}
+            >
+              <Text style={{ color: "#0ea5e9" }}>My Posts</Text>
+            </TouchableOpacity>
 
-              <TouchableOpacity onPress={logout} style={styles.logoutBtn}>
-                <Text style={styles.logoutBtnText}>Logout</Text>
-              </TouchableOpacity>
-            </View>
-          </TouchableOpacity>
-        </TouchableOpacity>
+            <TouchableOpacity onPress={logout} style={styles.logoutBtn}>
+              <Text style={styles.logoutBtnText}>Logout</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Overlay click (RIGHT) */}
+          <TouchableOpacity
+            style={{ flex: 1 }}
+            onPress={() => setMenuOpen(false)}
+          />
+        </View>
       </Modal>
 
-      {/* Posts */}
+      {/* Posts List */}
       <FlatList
         data={posts}
         keyExtractor={(item, index) =>
           item?.id ? item.id.toString() : index.toString()
         }
         renderItem={renderPost}
-        contentContainerStyle={{ padding: 16 }}
+        contentContainerStyle={{ padding: 16, flexGrow: 1 }}
+        ListEmptyComponent={
+          !loading && (
+            <View style={styles.center}>
+              <Text>No Posts Found</Text>
+            </View>
+          )
+        }
       />
 
       {/* FAB */}
@@ -166,8 +176,10 @@ const styles = StyleSheet.create({
 
   header: {
     flexDirection: "row",
+    alignItems: "center",
     justifyContent: "space-between",
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
   },
 
   menuIcon: { fontSize: 22 },
@@ -225,6 +237,7 @@ const styles = StyleSheet.create({
 
   drawerOverlay: {
     flex: 1,
+    flexDirection: "row",
     backgroundColor: "rgba(0,0,0,0.3)",
   },
 
