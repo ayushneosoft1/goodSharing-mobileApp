@@ -31,8 +31,8 @@ const CreatePostScreen = ({ navigation }) => {
       description,
       category,
       location,
-      imageUrl: "", // can improve later with image picker
-      token, // pass token for authentication
+      imageUrl: "",
+      token,
     });
 
     setLoading(false);

@@ -1,35 +1,41 @@
 // ./pages/MyPostsPage.jsx
-import React, { useEffect, useState } from "react";
+import React, { useState, useCallback } from "react";
 import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
   Image,
   SafeAreaView,
   ActivityIndicator,
   FlatList,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
 import { useAuth } from "../contexts/AuthContext";
 import { getPostsAPI } from "../api/postService";
+import { useFocusEffect } from "@react-navigation/native";
 
 export default function MyPostsPage() {
   const { user, token } = useAuth();
-  const navigation = useNavigation();
 
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const fetchPosts = async () => {
     setLoading(true);
+    setPosts([]);
+
     try {
       const res = await getPostsAPI(token);
 
       if (!res.error) {
-        const filteredPosts = (res.data || []).filter(
-          (post) => post.owner?.id == user?.id,
-        );
+        const filteredPosts = (res.data || []).filter((post) => {
+          const ownerId = post?.owner?.id ?? post?.userId ?? post?.ownerId;
+          const currentUserId = user?.id;
+
+          return ownerId && currentUserId
+            ? String(ownerId) === String(currentUserId)
+            : false;
+        });
+
         setPosts(filteredPosts);
       }
     } catch (err) {
@@ -39,9 +45,12 @@ export default function MyPostsPage() {
     }
   };
 
-  useEffect(() => {
-    if (user?.id) fetchPosts();
-  }, [user]);
+  // ✅ FIX: Re-fetch every time screen opens
+  useFocusEffect(
+    useCallback(() => {
+      fetchPosts();
+    }, [token]),
+  );
 
   const renderPost = ({ item }) => (
     <View style={styles.postCard}>
@@ -57,6 +66,7 @@ export default function MyPostsPage() {
     </View>
   );
 
+  // ✅ FIX: Proper loader
   if (loading) {
     return (
       <View style={styles.center}>
@@ -64,6 +74,8 @@ export default function MyPostsPage() {
       </View>
     );
   }
+
+  // ✅ FIX: Proper empty state
 
   return (
     <SafeAreaView style={styles.container}>
@@ -95,5 +107,9 @@ const styles = StyleSheet.create({
 
   postTitle: { fontSize: 16, fontWeight: "bold" },
 
-  center: { flex: 1, justifyContent: "center", alignItems: "center" },
+  center: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
 });
