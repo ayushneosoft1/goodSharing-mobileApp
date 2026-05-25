@@ -1,0 +1,20 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "b5099dda-d852-4165-bd81-4d39fa55b467"
+      }
+    },
+    "owner": "ayushneosoft",
+    "slug": "goodsharing",
+    "android": {
+      "package": "com.ayushneosoft.goodsharing"
+    },
+    "ios": {
+      "bundleIdentifier": "com.ayushneosoft.goodsharing",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    }
+  }
+}
