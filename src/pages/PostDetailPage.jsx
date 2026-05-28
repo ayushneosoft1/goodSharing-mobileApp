@@ -13,7 +13,9 @@ import { useAuth } from "../contexts/AuthContext";
 
 export default function PostDetailPage() {
   const route = useRoute();
-  const { id } = route.params;
+
+  // get postId from navigation params
+  const postId = route?.params?.postId;
 
   const { token } = useAuth();
 
@@ -21,12 +23,13 @@ export default function PostDetailPage() {
   const [loading, setLoading] = useState(true);
 
   const fetchPostDetail = async () => {
-    if (!token || !id) {
+    // use postId instead of id
+    if (!token || !postId) {
       setLoading(false);
       return;
     }
 
-    console.log("POST ID SENT:", id);
+    console.log("POST ID SENT:", postId);
 
     const query = `
       query GetPostDetails($postId: ID!) {
@@ -55,7 +58,9 @@ export default function PostDetailPage() {
         },
         body: JSON.stringify({
           query,
-          variables: { postId: String(id) }, // ✅ IMPORTANT
+          variables: {
+            postId: String(postId),
+          },
         }),
       });
 
@@ -79,9 +84,9 @@ export default function PostDetailPage() {
 
   useEffect(() => {
     fetchPostDetail();
-  }, [id, token]);
+  }, [postId, token]);
 
-  // ✅ Loader
+  // Loader
   if (loading) {
     return (
       <View style={styles.center}>
@@ -91,7 +96,7 @@ export default function PostDetailPage() {
     );
   }
 
-  // ✅ Empty state
+  // Empty state
   if (!post) {
     return (
       <View style={styles.center}>
@@ -100,15 +105,17 @@ export default function PostDetailPage() {
     );
   }
 
-  // ✅ UI
   return (
     <ScrollView style={styles.container}>
       <Image
-        source={{ uri: post.imageUrl || "https://via.placeholder.com/300" }}
+        source={{
+          uri: post.imageUrl || "https://via.placeholder.com/300",
+        }}
         style={styles.image}
       />
 
       <Text style={styles.title}>{post.title}</Text>
+
       <Text style={styles.desc}>{post.description}</Text>
 
       <Text style={styles.meta}>📍 {post.location || "Unknown"}</Text>
@@ -121,7 +128,10 @@ export default function PostDetailPage() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff" },
+  container: {
+    flex: 1,
+    backgroundColor: "#fff",
+  },
 
   image: {
     width: "100%",

@@ -1,97 +1,198 @@
-import React, { useEffect, useState } from "react";
+// pages/SubscribeCategoryPage.jsx
 
-import { View, Text, Button, Alert, ActivityIndicator } from "react-native";
-
-import CheckBox from "@react-native-community/checkbox";
+import React, { useState } from "react";
 
 import {
-  getSubscriptions,
-  updateSubscriptions,
-} from "../services/subscriptionService";
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+  ActivityIndicator,
+} from "react-native";
 
-import { CATEGORIES } from "../constants/categories";
+import { useNavigation } from "@react-navigation/native";
 
-const SubscribeCategoryPage = () => {
+import { subscribeCategoryAPI } from "../api/subscriptionService";
+
+const categories = ["BOOK", "CLOTH", "ELECTRONIC", "TOYS"];
+
+export default function SubscribeCategoryPage() {
+  const navigation = useNavigation();
+
   const [selected, setSelected] = useState([]);
 
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    loadSubscriptions();
-  }, []);
+  // ======================
+  // Toggle Category
+  // ======================
+  const toggleCategory = (item) => {
+    setSelected((prev) => {
+      if (prev.includes(item)) {
+        return prev.filter((c) => c !== item);
+      }
 
-  const loadSubscriptions = async () => {
-    try {
-      const data = await getSubscriptions();
-
-      setSelected(data);
-    } catch (error) {
-      console.log(error);
-
-      Alert.alert("Error", "Failed to load subscriptions");
-    }
+      return [...prev, item];
+    });
   };
 
-  const toggleCategory = (category) => {
-    if (selected.includes(category)) {
-      setSelected(selected.filter((item) => item !== category));
-    } else {
-      setSelected([...selected, category]);
-    }
-  };
-
-  const handleSave = async () => {
+  // ======================
+  // Submit Subscription
+  // ======================
+  const submit = async () => {
     try {
+      if (selected.length === 0) {
+        Alert.alert("Select Category", "Please select at least one category");
+
+        return;
+      }
+
       setLoading(true);
 
-      await updateSubscriptions(selected);
+      const formattedCategories = selected.map((item) => item.toUpperCase());
 
-      Alert.alert("Success", "Categories saved");
+      console.log("Sending Categories:", formattedCategories);
+
+      // save on backend only
+      const response = await subscribeCategoryAPI(formattedCategories);
+
+      console.log("SUBSCRIBE RESPONSE:", response);
+
+      Alert.alert("Success", "Categories subscribed successfully");
+
+      // reset selection
+      setSelected([]);
+
+      // optional navigation
+      navigation.goBack();
     } catch (error) {
-      Alert.alert("Error", "Save failed");
+      console.log("Subscription Error:", error);
+
+      Alert.alert("Error", "Subscription failed");
     } finally {
       setLoading(false);
     }
   };
 
+  // ======================
+  // Main UI
+  // ======================
   return (
-    <View
-      style={{
-        padding: 20,
-      }}
-    >
-      <Text
-        style={{
-          fontSize: 22,
-          marginBottom: 20,
-        }}
-      >
-        Subscribe Categories
-      </Text>
+    <View style={styles.container}>
+      <Text style={styles.title}>Select Categories</Text>
 
-      {CATEGORIES.map((item) => (
-        <View
+      {categories.map((item) => (
+        <TouchableOpacity
           key={item}
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            marginBottom: 10,
-          }}
+          style={[styles.row, selected.includes(item) && styles.selectedRow]}
+          onPress={() => toggleCategory(item)}
+          activeOpacity={0.8}
         >
-          <CheckBox
-            value={selected.includes(item)}
-            onValueChange={() => toggleCategory(item)}
-          />
+          <Text
+            style={[
+              styles.categoryText,
 
-          <Text>{item}</Text>
-        </View>
+              selected.includes(item) && styles.selectedText,
+            ]}
+          >
+            {item}
+          </Text>
+
+          <Text style={styles.checkbox}>
+            {selected.includes(item) ? "☑" : "☐"}
+          </Text>
+        </TouchableOpacity>
       ))}
 
-      {loading && <ActivityIndicator />}
+      <TouchableOpacity
+        style={[
+          styles.button,
 
-      <Button title={loading ? "Saving..." : "Save"} onPress={handleSave} />
+          loading && {
+            opacity: 0.7,
+          },
+        ]}
+        onPress={submit}
+        disabled={loading}
+      >
+        {loading ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.buttonText}>Submit</Text>
+        )}
+      </TouchableOpacity>
     </View>
   );
-};
+}
 
-export default SubscribeCategoryPage;
+// ======================
+// Styles
+// ======================
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 20,
+    backgroundColor: "#fff",
+  },
+
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 20,
+  },
+
+  row: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+
+    padding: 16,
+
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+
+    borderRadius: 10,
+
+    marginBottom: 12,
+
+    backgroundColor: "#fff",
+  },
+
+  selectedRow: {
+    backgroundColor: "#e0f2fe",
+    borderColor: "#0ea5e9",
+  },
+
+  categoryText: {
+    fontSize: 16,
+    color: "#111827",
+  },
+
+  selectedText: {
+    fontWeight: "bold",
+    color: "#0284c7",
+  },
+
+  checkbox: {
+    fontSize: 22,
+  },
+
+  button: {
+    marginTop: 30,
+
+    backgroundColor: "#0ea5e9",
+
+    padding: 16,
+
+    borderRadius: 10,
+
+    alignItems: "center",
+  },
+
+  buttonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+});
