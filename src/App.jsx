@@ -1,17 +1,19 @@
-// App.jsx
+import "react-native-gesture-handler";
 import React from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { View, ActivityIndicator } from "react-native";
 import { registerRootComponent } from "expo";
-import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
+
 import LoginPage from "./pages/LoginPage";
-import PostsListPage from "./pages/PostsListPage";
 import PostDetailPage from "./pages/PostDetailPage";
 import CreatePostPage from "./pages/CreatePostPage";
-import MyPostsPage from "./pages/MyPostsPage";
+import NotificationPage from "./pages/NotificationPage";
+
+import DrawerNavigation from "./navigation/DrawerNavigation.jsx";
 
 const Stack = createNativeStackNavigator();
 
@@ -25,10 +27,9 @@ function Navigation() {
           flex: 1,
           justifyContent: "center",
           alignItems: "center",
-          backgroundColor: "#e0f2fe",
         }}
       >
-        <ActivityIndicator size="large" color="#0ea5e9" />
+        <ActivityIndicator size="large" />
       </View>
     );
   }
@@ -36,51 +37,40 @@ function Navigation() {
   return (
     <Stack.Navigator>
       {!isAuthenticated ? (
-        // 🔐 Auth Flow
         <Stack.Screen
           name="Login"
           component={LoginPage}
           options={{ headerShown: false }}
         />
       ) : (
-        // ✅ App Flow
         <>
           <Stack.Screen
-            name="PostsList"
-            component={PostsListPage}
+            name="Home"
+            component={DrawerNavigation}
             options={{ headerShown: false }}
           />
 
           <Stack.Screen
             name="PostDetail"
             component={PostDetailPage}
-            options={{ headerShown: true, title: "Item Details" }}
+            options={{
+              title: "Item Details",
+            }}
           />
 
           <Stack.Screen
             name="CreatePost"
             component={CreatePostPage}
-            options={{ headerShown: true, title: "Share Item" }}
+            options={{
+              title: "Share Item",
+            }}
           />
 
           <Stack.Screen
-            name="MyPosts"
-            component={MyPostsPage}
+            name="NotificationPage"
+            component={NotificationPage}
             options={{
-              headerShown: true,
-              title: "My Posts",
-              headerTitleAlign: "center",
-
-              headerStyle: {
-                backgroundColor: "#fff",
-              },
-
-              headerTitleStyle: {
-                fontSize: 18,
-                fontWeight: "bold",
-              },
-
-              headerTintColor: "#0ea5e9",
+              title: "Notifications",
             }}
           />
         </>
@@ -101,5 +91,4 @@ export default function App() {
   );
 }
 
-// ✅ Register the App after its declaration
 registerRootComponent(App);

@@ -1,5 +1,12 @@
 // ./pages/PostsListPage.jsx
-import React, { useState, useCallback } from "react";
+
+import React, {
+  useState,
+  useCallback,
+  useLayoutEffect,
+  useEffect,
+} from "react";
+
 import {
   View,
   Text,
@@ -7,54 +14,132 @@ import {
   TouchableOpacity,
   Image,
   SafeAreaView,
-  Modal,
   ActivityIndicator,
   FlatList,
 } from "react-native";
+
+import { Ionicons } from "@expo/vector-icons";
+
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
+
 import { useAuth } from "../contexts/AuthContext";
+
 import { getPostsAPI } from "../api/postService";
+
+import { getUnreadNotificationCountAPI } from "../api/notificationService";
+
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function PostsListPage() {
   const insets = useSafeAreaInsets();
-  const { user, logout, token } = useAuth();
+
   const navigation = useNavigation();
 
-  const [menuOpen, setMenuOpen] = useState(false);
+  const { user, logout, token } = useAuth();
+
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  // ======================
+  // Header Buttons
+  // ======================
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerLeft: () => (
+        <TouchableOpacity
+          onPress={() => navigation.openDrawer()}
+          style={{ paddingLeft: 15 }}
+        >
+          <Ionicons name="menu" size={28} color="#000" />
+        </TouchableOpacity>
+      ),
+
+      headerTitle: "goodSharing",
+
+      headerRight: () => (
+        <TouchableOpacity
+          onPress={() => navigation.navigate("NotificationPage")}
+          style={styles.notificationBtn}
+        >
+          <Ionicons name="notifications-outline" size={26} color="#000" />
+
+          {unreadCount > 0 && (
+            <View style={styles.notificationBadge}>
+              <Text style={styles.notificationBadgeText}>
+                {unreadCount > 99 ? "99+" : unreadCount}
+              </Text>
+            </View>
+          )}
+        </TouchableOpacity>
+      ),
+    });
+  }, [navigation, unreadCount]);
+
+  // ======================
+  // Format Date
+  // ======================
   const formatDate = (dateString) => {
     if (!dateString) return "";
+
     return new Date(dateString).toLocaleDateString();
   };
 
+  // ======================
+  // Fetch Posts
+  // ======================
   const fetchPosts = async () => {
     setLoading(true);
+
     try {
       const res = await getPostsAPI(token);
+
       if (!res.error) {
         setPosts(res.data || []);
       }
     } catch (err) {
-      console.log("Error fetching posts", err);
+      console.log("Error fetching posts:", err);
     } finally {
       setLoading(false);
     }
   };
 
-  // ✅ Refresh when screen focuses
+  // ======================
+  // Fetch Notification Count
+  // ======================
+  const fetchUnreadCount = async () => {
+    try {
+      const count = await getUnreadNotificationCountAPI();
+
+      setUnreadCount(count || 0);
+    } catch (error) {
+      console.log("Unread Count Error:", error);
+    }
+  };
+
+  // ======================
+  // Refresh on Screen Focus
+  // ======================
   useFocusEffect(
     useCallback(() => {
       fetchPosts();
+
+      fetchUnreadCount();
     }, [token]),
   );
 
+  // ======================
+  // Render Post
+  // ======================
   const renderPost = ({ item }) => (
     <TouchableOpacity
       style={styles.postCard}
-      onPress={() => navigation.navigate("PostDetail", { id: item.id })}
+      onPress={() =>
+        navigation.navigate("PostDetail", {
+          postId: item.id,
+        })
+      }
     >
       <Image
         source={{
@@ -82,13 +167,16 @@ export default function PostsListPage() {
 
         <View style={styles.postMeta}>
           <Text style={styles.metaItem}>📍 {item.location || "Unknown"}</Text>
+
           <Text style={styles.metaItem}>🕒 {formatDate(item.createdAt)}</Text>
         </View>
       </View>
     </TouchableOpacity>
   );
 
-  // ✅ Loader
+  // ======================
+  // Loading
+  // ======================
   if (loading) {
     return (
       <View style={styles.center}>
@@ -97,60 +185,36 @@ export default function PostsListPage() {
     );
   }
 
+  // ======================
+  // Main UI
+  // ======================
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
-      <View style={[styles.header, { paddingTop: insets.top }]}>
-        <TouchableOpacity onPress={() => setMenuOpen(true)}>
-          <Text style={styles.menuIcon}>☰</Text>
-        </TouchableOpacity>
-
+      <View
+        style={[
+          styles.header,
+          {
+            paddingTop: insets.top,
+          },
+        ]}
+      >
         <Text style={styles.headerTitle}>goodSharing</Text>
+
         <View style={{ width: 30 }} />
       </View>
 
-      {/* Drawer */}
-      <Modal transparent visible={menuOpen} animationType="fade">
-        <View style={styles.drawerOverlay}>
-          {/* Drawer (LEFT) */}
-          <View style={styles.drawer}>
-            <Text style={styles.drawerLogo}>📦 goodSharing</Text>
-
-            <Text style={styles.userName}>
-              {user?.first_name} {user?.last_name}
-            </Text>
-
-            <TouchableOpacity
-              style={{ marginTop: 20 }}
-              onPress={() => {
-                setMenuOpen(false);
-                navigation.navigate("MyPosts");
-              }}
-            >
-              <Text style={{ color: "#0ea5e9" }}>My Posts</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity onPress={logout} style={styles.logoutBtn}>
-              <Text style={styles.logoutBtnText}>Logout</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Overlay click (RIGHT) */}
-          <TouchableOpacity
-            style={{ flex: 1 }}
-            onPress={() => setMenuOpen(false)}
-          />
-        </View>
-      </Modal>
-
-      {/* Posts List */}
+      {/* Posts */}
       <FlatList
         data={posts}
         keyExtractor={(item, index) =>
           item?.id ? item.id.toString() : index.toString()
         }
         renderItem={renderPost}
-        contentContainerStyle={{ padding: 16, flexGrow: 1 }}
+        contentContainerStyle={{
+          padding: 16,
+          flexGrow: 1,
+        }}
         ListEmptyComponent={
           !loading && (
             <View style={styles.center}>
@@ -160,7 +224,7 @@ export default function PostsListPage() {
         }
       />
 
-      {/* FAB */}
+      {/* Floating Button */}
       <TouchableOpacity
         style={styles.fab}
         onPress={() => navigation.navigate("CreatePost")}
@@ -171,20 +235,48 @@ export default function PostsListPage() {
   );
 }
 
+// ======================
+// Styles
+// ======================
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff" },
+  container: {
+    flex: 1,
+    backgroundColor: "#fff",
+  },
 
   header: {
-    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
+    justifyContent: "center",
     paddingVertical: 12,
   },
 
-  menuIcon: { fontSize: 22 },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+  },
 
-  headerTitle: { fontSize: 18, fontWeight: "bold" },
+  notificationBtn: {
+    marginRight: 15,
+  },
+
+  notificationBadge: {
+    position: "absolute",
+    top: -5,
+    right: -8,
+    backgroundColor: "red",
+    borderRadius: 10,
+    minWidth: 18,
+    height: 18,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 4,
+  },
+
+  notificationBadgeText: {
+    color: "#fff",
+    fontSize: 10,
+    fontWeight: "bold",
+  },
 
   postCard: {
     marginBottom: 16,
@@ -193,30 +285,52 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
 
-  postImage: { width: "100%", height: 180 },
+  postImage: {
+    width: "100%",
+    height: 180,
+  },
 
-  postContent: { padding: 12 },
+  postContent: {
+    padding: 12,
+  },
 
   postHeaderRow: {
     flexDirection: "row",
     justifyContent: "space-between",
   },
 
-  postTitle: { fontSize: 16, fontWeight: "bold" },
+  postTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    flex: 1,
+    marginRight: 10,
+  },
 
   badge: {
     backgroundColor: "#0ea5e9",
     paddingHorizontal: 8,
     borderRadius: 8,
+    justifyContent: "center",
   },
 
-  badgeText: { color: "#fff", fontSize: 12 },
+  badgeText: {
+    color: "#fff",
+    fontSize: 12,
+  },
 
-  postDescription: { color: "#555", marginTop: 4 },
+  postDescription: {
+    color: "#555",
+    marginTop: 4,
+  },
 
-  postMeta: { marginTop: 6 },
+  postMeta: {
+    marginTop: 8,
+  },
 
-  metaItem: { fontSize: 12, color: "#777" },
+  metaItem: {
+    fontSize: 12,
+    color: "#777",
+  },
 
   center: {
     flex: 1,
@@ -233,26 +347,9 @@ const styles = StyleSheet.create({
     borderRadius: 50,
   },
 
-  fabText: { color: "#fff", fontSize: 20 },
-
-  drawerOverlay: {
-    flex: 1,
-    flexDirection: "row",
-    backgroundColor: "rgba(0,0,0,0.3)",
+  fabText: {
+    color: "#fff",
+    fontSize: 22,
+    fontWeight: "bold",
   },
-
-  drawer: {
-    width: 250,
-    backgroundColor: "#fff",
-    padding: 20,
-    height: "100%",
-  },
-
-  drawerLogo: { fontSize: 18, fontWeight: "bold" },
-
-  userName: { marginTop: 10 },
-
-  logoutBtn: { marginTop: 20 },
-
-  logoutBtnText: { color: "red" },
 });
