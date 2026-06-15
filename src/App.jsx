@@ -1,34 +1,32 @@
 import "react-native-gesture-handler";
-import React from "react";
+
+import React, { useEffect, useRef } from "react";
+import * as Notifications from "expo-notifications";
+
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { View, ActivityIndicator } from "react-native";
-import { registerRootComponent } from "expo";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { registerRootComponent } from "expo";
 
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 
 import LoginPage from "./pages/LoginPage";
 import PostDetailPage from "./pages/PostDetailPage";
 import CreatePostPage from "./pages/CreatePostPage";
+import DrawerNavigation from "./navigation/DrawerNavigation";
 import NotificationPage from "./pages/NotificationPage";
 
-import DrawerNavigation from "./navigation/DrawerNavigation.jsx";
-
 const Stack = createNativeStackNavigator();
+
+export const navigationRef = React.createRef();
 
 function Navigation() {
   const { isAuthenticated, loading } = useAuth();
 
   if (loading) {
     return (
-      <View
-        style={{
-          flex: 1,
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      >
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <ActivityIndicator size="large" />
       </View>
     );
@@ -44,35 +42,18 @@ function Navigation() {
         />
       ) : (
         <>
+          {/* Drawer App */}
           <Stack.Screen
             name="Home"
             component={DrawerNavigation}
             options={{ headerShown: false }}
           />
 
-          <Stack.Screen
-            name="PostDetail"
-            component={PostDetailPage}
-            options={{
-              title: "Item Details",
-            }}
-          />
+          <Stack.Screen name="NotificationPage" component={NotificationPage} />
 
-          <Stack.Screen
-            name="CreatePost"
-            component={CreatePostPage}
-            options={{
-              title: "Share Item",
-            }}
-          />
-
-          <Stack.Screen
-            name="NotificationPage"
-            component={NotificationPage}
-            options={{
-              title: "Notifications",
-            }}
-          />
+          {/* Stack Screens */}
+          <Stack.Screen name="PostDetail" component={PostDetailPage} />
+          <Stack.Screen name="CreatePost" component={CreatePostPage} />
         </>
       )}
     </Stack.Navigator>
@@ -80,10 +61,49 @@ function Navigation() {
 }
 
 export default function App() {
+  const notificationListener = useRef();
+  const responseListener = useRef();
+
+  useEffect(() => {
+    // Foreground notification
+    notificationListener.current =
+      Notifications.addNotificationReceivedListener((notification) => {
+        console.log("Notification received:", notification);
+      });
+
+    // Notification click
+    responseListener.current =
+      Notifications.addNotificationResponseReceivedListener((response) => {
+        const postId = response.notification.request.content.data?.postId;
+
+        console.log("Notification clicked:", postId);
+
+        if (postId) {
+          navigationRef.current?.navigate("PostDetail", { postId });
+        }
+      });
+
+    // App opened from killed state
+    Notifications.getLastNotificationResponseAsync().then((response) => {
+      const postId = response?.notification?.request?.content?.data?.postId;
+
+      if (postId) {
+        setTimeout(() => {
+          navigationRef.current?.navigate("PostDetail", { postId });
+        }, 1000);
+      }
+    });
+
+    return () => {
+      notificationListener.current?.remove();
+      responseListener.current?.remove();
+    };
+  }, []);
+
   return (
     <SafeAreaProvider>
       <AuthProvider>
-        <NavigationContainer>
+        <NavigationContainer ref={navigationRef}>
           <Navigation />
         </NavigationContainer>
       </AuthProvider>
