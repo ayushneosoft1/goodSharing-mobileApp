@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { signinAPI, signupAPI } from "../api/authService";
+import { signinAPI, signupAPI, savePushTokenAPI } from "../api/authService";
+import { registerForPushNotifications } from "../services/notificationService";
 
 const AuthContext = createContext();
 
@@ -15,18 +16,8 @@ export function AuthProvider({ children }) {
         const savedUser = await AsyncStorage.getItem("goodSharing_user");
         const savedToken = await AsyncStorage.getItem("goodSharing_token");
 
-        if (savedUser) {
-          try {
-            setUser(JSON.parse(savedUser));
-          } catch (e) {
-            console.log("User parse error", e);
-            setUser(null);
-          }
-        }
-
-        if (savedToken) {
-          setToken(savedToken);
-        }
+        if (savedUser) setUser(JSON.parse(savedUser));
+        if (savedToken) setToken(savedToken);
       } catch (e) {
         console.log("Load user error", e);
       } finally {
@@ -42,68 +33,79 @@ export function AuthProvider({ children }) {
     try {
       const res = await signinAPI({ email, password });
 
-      if (!res || res.error) {
-        return res || { error: "No response from server" };
-      }
+      if (!res || res.error) return res;
 
-      if (res.data?.token) {
-        setToken(res.data.token);
-        await AsyncStorage.setItem("goodSharing_token", res.data.token);
-      }
+      const authToken = res.data?.token;
+      const authUser = res.data?.user;
 
-      if (res.data?.user) {
-        await AsyncStorage.setItem(
-          "goodSharing_user",
-          JSON.stringify(res.data.user),
-        );
-        setUser(res.data.user);
+      if (!authToken) return { error: "No token received" };
+
+      setToken(authToken);
+      setUser(authUser);
+
+      await AsyncStorage.setItem("goodSharing_token", authToken);
+      await AsyncStorage.setItem("goodSharing_user", JSON.stringify(authUser));
+
+      // PUSH TOKEN (deduped)
+      try {
+        const expoToken = await registerForPushNotifications();
+        console.log("Expo Push Token:", expoToken);
+
+        if (expoToken) {
+          const savedToken = await AsyncStorage.getItem("expo_push_token");
+
+          if (savedToken !== expoToken) {
+            await savePushTokenAPI(expoToken, authToken);
+            await AsyncStorage.setItem("expo_push_token", expoToken);
+          }
+        }
+      } catch (e) {
+        console.log("Push token error:", e);
       }
 
       return res;
     } catch (error) {
-      console.error("Login failed:", error);
-      return { error: error.message || "Login failed" };
+      return { error: error.message };
     }
   };
 
   // SIGNUP
   const signup = async (first_name, last_name, email, password) => {
     try {
-      const res = await signupAPI({
-        first_name,
-        last_name,
-        email,
-        password,
-      });
+      const res = await signupAPI({ first_name, last_name, email, password });
 
-      if (!res || res.error) {
-        return res || { error: "No response from server" };
+      if (!res || res.error) return res;
+
+      const authToken = res.data?.token;
+      const authUser = res.data?.user;
+
+      if (authToken) {
+        setToken(authToken);
+        await AsyncStorage.setItem("goodSharing_token", authToken);
       }
 
-      if (res.data?.token) {
-        setToken(res.data.token);
-        await AsyncStorage.setItem("goodSharing_token", res.data.token);
-      }
-
-      if (res.data?.user) {
+      if (authUser) {
+        setUser(authUser);
         await AsyncStorage.setItem(
           "goodSharing_user",
-          JSON.stringify(res.data.user),
+          JSON.stringify(authUser),
         );
-        setUser(res.data.user);
       }
 
       return res;
     } catch (error) {
-      console.error("Signup failed:", error);
-      return { error: error.message || "Signup failed" };
+      return { error: error.message };
     }
   };
 
   // LOGOUT
   const logout = async () => {
-    await AsyncStorage.removeItem("goodSharing_user");
-    await AsyncStorage.removeItem("goodSharing_token");
+    await AsyncStorage.multiRemove([
+      "goodSharing_user",
+      "goodSharing_token",
+      "expo_push_token",
+    ]);
+
     setUser(null);
     setToken(null);
   };
@@ -126,9 +128,5 @@ export function AuthProvider({ children }) {
 }
 
 export function useAuth() {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth must be used within AuthProvider");
-  }
-  return context;
+  return useContext(AuthContext);
 }
