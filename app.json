@@ -1,10 +1,16 @@
 {
   "expo": {
+    "name": "goodsharing-mobile",
+    "slug": "goodsharing-mobile",
+    "version": "1.0.0",
+    "owner": "nilesh2026",
+    "android": {
+      "package": "com.neosoft.goodsharing"
+    },
     "extra": {
       "eas": {
         "projectId": "31a28ec5-bb4c-444b-b87a-ae472b051c23"
       }
-    },
-    "owner": "nilesh2026"
+    }
   }
 }
