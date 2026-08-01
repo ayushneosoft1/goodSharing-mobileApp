@@ -9,16 +9,17 @@
       "package": "com.neosoft.goodsharing"
     },
 
-    "plugins": [
-      [
-        "expo-splash-screen",
-        {
-          "backgroundColor": "#ffffff",
-          "image": "./assets/splash.png",
-          "imageWidth": 200
-        }
-      ]
-    ],
+   "plugins": [
+  "expo-notifications",
+  [
+    "expo-splash-screen",
+    {
+      "backgroundColor": "#ffffff",
+      "image": "./assets/splash.png",
+      "imageWidth": 200
+    }
+  ]
+],
 
     "extra": {
       "eas": {

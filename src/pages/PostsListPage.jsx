@@ -1,11 +1,6 @@
 // ./pages/PostsListPage.jsx
 
-import React, {
-  useState,
-  useCallback,
-  useLayoutEffect,
-  useEffect,
-} from "react";
+import React, { useState, useCallback, useLayoutEffect } from "react";
 
 import {
   View,
@@ -29,6 +24,8 @@ import { getPostsAPI } from "../api/postService";
 import { getUnreadNotificationCountAPI } from "../api/notificationService";
 
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+import noImage from "../../assets/images/no-image.png";
 
 export default function PostsListPage() {
   const insets = useSafeAreaInsets();
@@ -142,9 +139,7 @@ export default function PostsListPage() {
       }
     >
       <Image
-        source={{
-          uri: item.imageUrl || "https://via.placeholder.com/300",
-        }}
+        source={item.imageUrl ? { uri: item.imageUrl } : noImage}
         style={styles.postImage}
       />
 
@@ -190,20 +185,6 @@ export default function PostsListPage() {
   // ======================
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View
-        style={[
-          styles.header,
-          {
-            paddingTop: insets.top,
-          },
-        ]}
-      >
-        <Text style={styles.headerTitle}>goodSharing</Text>
-
-        <View style={{ width: 30 }} />
-      </View>
-
       {/* Posts */}
       <FlatList
         data={posts}
@@ -242,17 +223,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
-  },
-
-  header: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 12,
-  },
-
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
   },
 
   notificationBtn: {

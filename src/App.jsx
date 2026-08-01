@@ -2,6 +2,7 @@ import "react-native-gesture-handler";
 
 import React, { useEffect, useRef } from "react";
 import * as Notifications from "expo-notifications";
+import { registerForPushNotifications } from "./services/notificationService";
 
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
@@ -65,13 +66,29 @@ export default function App() {
   const responseListener = useRef();
 
   useEffect(() => {
-    // Foreground notification
+    console.log("APP USEEFFECT STARTED");
+
+    // Register for push notifications
+    const setupNotifications = async () => {
+      console.log("SETUP NOTIFICATIONS CALLED");
+
+      try {
+        const token = await registerForPushNotifications();
+        console.log("TOKEN =>", token);
+      } catch (err) {
+        console.log("NOTIFICATION ERROR =>", err);
+      }
+    };
+
+    setupNotifications();
+
+    // Foreground notification listener
     notificationListener.current =
       Notifications.addNotificationReceivedListener((notification) => {
         console.log("Notification received:", notification);
       });
 
-    // Notification click
+    // Notification click listener
     responseListener.current =
       Notifications.addNotificationResponseReceivedListener((response) => {
         const postId = response.notification.request.content.data?.postId;
