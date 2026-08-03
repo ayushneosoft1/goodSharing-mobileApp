@@ -6,8 +6,7 @@ import api from "../services/api";
 export const getNotificationsAPI = async () => {
   try {
     const response = await api.post("", {
-      query: `
-        query GetNotifications {
+      query: `         query GetNotifications {
           notifications {
             id
             title
@@ -15,7 +14,6 @@ export const getNotificationsAPI = async () => {
             isRead
             postId
             createdAt
-
             post {
               id
               title
@@ -30,7 +28,6 @@ export const getNotificationsAPI = async () => {
     return response?.data?.data?.notifications || [];
   } catch (error) {
     console.log("Notification API Error:", error.response?.data || error);
-
     return [];
   }
 };
@@ -41,8 +38,7 @@ export const getNotificationsAPI = async () => {
 export const markNotificationReadAPI = async (notificationId) => {
   try {
     const response = await api.post("", {
-      query: `
-        mutation MarkNotificationRead($notificationId: ID!) {
+      query: `         mutation MarkNotificationRead($notificationId: ID!) {
           markNotificationRead(notificationId: $notificationId)
         }
       `,
@@ -54,7 +50,6 @@ export const markNotificationReadAPI = async (notificationId) => {
     return response?.data?.data?.markNotificationRead || false;
   } catch (error) {
     console.log("Mark Notification Error:", error.response?.data || error);
-
     return false;
   }
 };
@@ -65,8 +60,7 @@ export const markNotificationReadAPI = async (notificationId) => {
 export const getUnreadNotificationCountAPI = async () => {
   try {
     const response = await api.post("", {
-      query: `
-        query GetUnreadCount {
+      query: `         query GetUnreadCount {
           unreadNotificationCount
         }
       `,
@@ -78,7 +72,30 @@ export const getUnreadNotificationCountAPI = async () => {
       "Unread Notification Count Error:",
       error.response?.data || error,
     );
-
     return 0;
+  }
+};
+
+// ======================
+// Save Expo Push Token
+// ======================
+export const savePushTokenAPI = async (token) => {
+  try {
+    const response = await api.post("", {
+      query: `         mutation SavePushToken($token: String!) {
+          savePushToken(token: $token)
+        }
+      `,
+      variables: {
+        token,
+      },
+    });
+
+    console.log("SAVE PUSH TOKEN RESPONSE:", response.data);
+
+    return response?.data?.data?.savePushToken || false;
+  } catch (error) {
+    console.log("Save Push Token Error:", error.response?.data || error);
+    return false;
   }
 };

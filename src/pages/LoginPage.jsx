@@ -11,6 +11,8 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { useAuth } from "../contexts/AuthContext";
+import { registerForPushNotifications } from "../services/notificationService";
+import { savePushTokenAPI } from "../api/notificationService";
 
 export default function LoginPage() {
   const { login, signup } = useAuth();
@@ -27,10 +29,12 @@ export default function LoginPage() {
   const [signupPassword, setSignupPassword] = useState("");
 
   const handleLogin = async () => {
+    console.log("LOGIN BUTTON PRESSED");
     setLoading(true);
     setError("");
 
     const res = await login(loginEmail, loginPassword);
+    console.log("LOGIN RESPONSE =>", JSON.stringify(res));
 
     if (res.error) {
       // login failed
@@ -39,6 +43,28 @@ export default function LoginPage() {
       // login succeded
 
       console.log("Login successful:", res.data.user);
+
+      // Wait for token to be stored in AsyncStorage
+
+      setTimeout(async () => {
+        try {
+          console.log("START TOKEN SAVE FLOW");
+
+          const expoToken = await registerForPushNotifications();
+
+          console.log("TOKEN =>", expoToken);
+
+          if (expoToken) {
+            const saved = await savePushTokenAPI(expoToken);
+            console.log("TOKEN SAVED TO BACKEND =>", saved);
+          } else {
+            console.log("NO EXPO TOKEN RECEIVED");
+          }
+        } catch (err) {
+          console.log("TOKEN SAVE FLOW ERROR =>", err);
+        }
+      }, 500);
+
       // AuthContext will automatically handle navigation via state change
     } else {
       setError("Something went wrong");
@@ -79,7 +105,7 @@ export default function LoginPage() {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
           <Text style={styles.logo}>📦</Text>
-          <Text style={styles.title}>goodSharing</Text>
+
           <Text style={styles.subtitle}>
             Share what you have, find what you need
           </Text>
