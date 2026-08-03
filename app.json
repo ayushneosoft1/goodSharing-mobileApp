@@ -4,23 +4,21 @@
     "slug": "goodsharing-mobile",
     "version": "1.0.0",
     "owner": "nilesh2026",
-
     "android": {
       "package": "com.neosoft.goodsharing"
     },
-
-   "plugins": [
-  "expo-notifications",
-  [
-    "expo-splash-screen",
-    {
-      "backgroundColor": "#ffffff",
-      "image": "./assets/splash.png",
-      "imageWidth": 200
-    }
-  ]
-],
-
+    "plugins": [
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#ffffff",
+          "image": "./assets/splash.png",
+          "imageWidth": 200
+        }
+      ],
+      "expo-asset",
+      "expo-font"
+    ],
     "extra": {
       "eas": {
         "projectId": "31a28ec5-bb4c-444b-b87a-ae472b051c23"
