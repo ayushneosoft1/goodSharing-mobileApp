@@ -104,6 +104,8 @@ export default function LoginPage() {
     >
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
+          <Text style={styles.title}>goodSharing</Text>
+
           <Text style={styles.logo}>📦</Text>
 
           <Text style={styles.subtitle}>
@@ -219,7 +221,12 @@ const styles = StyleSheet.create({
   scrollContent: { padding: 20, paddingTop: 60 },
   header: { alignItems: "center", marginBottom: 30 },
   logo: { fontSize: 50, marginBottom: 10 },
-  title: { fontSize: 28, fontWeight: "bold", color: "#0c4a6e" },
+  title: {
+    fontSize: 28,
+    fontWeight: "bold",
+    color: "#0c4a6e",
+    marginBottom: 8,
+  },
   subtitle: {
     fontSize: 16,
     color: "#0c4a6e",
