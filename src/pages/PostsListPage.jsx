@@ -44,6 +44,15 @@ export default function PostsListPage() {
   // ======================
   useLayoutEffect(() => {
     navigation.setOptions({
+      headerStyle: {
+        backgroundColor: "#ffffff",
+      },
+      headerTintColor: "#000000",
+      headerTitleStyle: {
+        color: "#000000",
+        fontWeight: "bold",
+      },
+
       headerLeft: () => (
         <TouchableOpacity
           onPress={() => navigation.openDrawer()}

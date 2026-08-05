@@ -8,6 +8,10 @@ Notifications.setNotificationHandler({
     shouldShowAlert: true,
     shouldPlaySound: true,
     shouldSetBadge: true,
+
+    // SDK 53+ compatibility
+    shouldShowBanner: true,
+    shouldShowList: true,
   }),
 });
 
