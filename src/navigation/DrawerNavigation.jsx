@@ -11,10 +11,22 @@ const Drawer = createDrawerNavigator();
 
 export default function DrawerNavigation() {
   return (
-    <Drawer.Navigator screenOptions={{ headerTitleAlign: "center" }}>
+    <Drawer.Navigator
+      screenOptions={{
+        headerTitleAlign: "center",
+        headerStyle: {
+          backgroundColor: "#ffffff",
+        },
+        headerTintColor: "#000000",
+        headerTitleStyle: {
+          color: "#000000",
+          fontWeight: "bold",
+        },
+        drawerType: "front",
+      }}
+    >
       <Drawer.Screen name="Posts" component={PostsListPage} />
       <Drawer.Screen name="MyPosts" component={MyPostsPage} />
-
       <Drawer.Screen name="Notifications" component={NotificationPage} />
       <Drawer.Screen name="MyProfile" component={MyProfilePage} />
       <Drawer.Screen name="LogOut" component={LogoutPage} />
