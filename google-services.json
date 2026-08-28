@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "471414189381",
+    "project_id": "goodsharing-ccd1a",
+    "storage_bucket": "goodsharing-ccd1a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:471414189381:android:c58ec6cf61b4c37d4ca22c",
+        "android_client_info": {
+          "package_name": "com.neosoft.goodsharing"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCo0KU0oDkoXkk9kAhUU0xLQg4asXMHyYM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

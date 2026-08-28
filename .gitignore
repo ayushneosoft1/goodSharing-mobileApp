@@ -65,3 +65,5 @@ docker-compose.override.yml
 *.swp
 
 .expo/
+/android
+/ios
