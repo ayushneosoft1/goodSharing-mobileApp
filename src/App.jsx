@@ -2,7 +2,6 @@ import "react-native-gesture-handler";
 
 import React, { useEffect, useRef } from "react";
 import * as Notifications from "expo-notifications";
-import { registerForPushNotifications } from "./services/notificationService";
 
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
@@ -68,20 +67,6 @@ export default function App() {
   useEffect(() => {
     console.log("APP USEEFFECT STARTED");
 
-    // Register for push notifications
-    const setupNotifications = async () => {
-      console.log("SETUP NOTIFICATIONS CALLED");
-
-      try {
-        const token = await registerForPushNotifications();
-        console.log("TOKEN =>", token);
-      } catch (err) {
-        console.log("NOTIFICATION ERROR =>", err);
-      }
-    };
-
-    setupNotifications();
-
     // Foreground notification listener
     notificationListener.current =
       Notifications.addNotificationReceivedListener((notification) => {
@@ -91,9 +76,11 @@ export default function App() {
     // Notification click listener
     responseListener.current =
       Notifications.addNotificationResponseReceivedListener((response) => {
-        const postId = response.notification.request.content.data?.postId;
+        const data = response.notification.request.content.data;
 
-        console.log("Notification clicked:", postId);
+        console.log("Notification clicked. Data:", data);
+
+        const postId = data?.postId;
 
         if (postId) {
           navigationRef.current?.navigate("PostDetail", { postId });
@@ -102,7 +89,11 @@ export default function App() {
 
     // App opened from killed state
     Notifications.getLastNotificationResponseAsync().then((response) => {
-      const postId = response?.notification?.request?.content?.data?.postId;
+      const data = response?.notification?.request?.content?.data;
+
+      console.log("Killed-state notification data:", data);
+
+      const postId = data?.postId;
 
       if (postId) {
         setTimeout(() => {
