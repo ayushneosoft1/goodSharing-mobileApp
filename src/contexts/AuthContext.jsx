@@ -108,6 +108,11 @@ export function AuthProvider({ children }) {
         return null;
       }
 
+      console.log("AUTH TOKEN CHECK:", {
+        exists: !!authToken,
+        length: authToken?.length || 0,
+      });
+
       // ------------------------------------------------------
       // 1. Get native FCM token
       // ------------------------------------------------------
