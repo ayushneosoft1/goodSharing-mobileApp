@@ -113,6 +113,9 @@ export const registerDeviceAPI = async ({
     if (!platform) return { error: "platform is required" };
     if (!authToken) return { error: "Authentication token is required" };
 
+    console.log("REGISTER DEVICE URL:", BASE_URL);
+    console.log("REGISTER DEVICE AUTH EXISTS:", !!authToken);
+
     const response = await fetch(BASE_URL, {
       method: "POST",
       headers: {

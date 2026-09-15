@@ -10,6 +10,13 @@ import {
 
 import { getMySubscriptionsAPI } from "../api/subscriptionService";
 
+const CATEGORY_NAMES = {
+  1: "BOOK",
+  2: "CLOTH",
+  3: "ELECTRONIC",
+  4: "TOYS",
+};
+
 const MySubscriptionsPage = () => {
   const [subscriptions, setSubscriptions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -47,10 +54,12 @@ const MySubscriptionsPage = () => {
       ) : (
         <FlatList
           data={subscriptions}
-          keyExtractor={(item) => item}
+          keyExtractor={(item) => String(item)}
           renderItem={({ item }) => (
             <View style={styles.card}>
-              <Text style={styles.text}>{item}</Text>
+              <Text style={styles.text}>
+                {CATEGORY_NAMES[String(item)] || `Category ${item}`}
+              </Text>
             </View>
           )}
         />

@@ -14,6 +14,7 @@ import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import {
   getNotificationsAPI,
   markNotificationReadAPI,
+  markAllNotificationsReadAPI,
 } from "../api/notificationService";
 
 const NotificationPage = () => {
@@ -55,24 +56,50 @@ const NotificationPage = () => {
   // ======================
   const openNotification = async (item) => {
     try {
-      // mark notification as read
-      await markNotificationReadAPI(item.id);
+      const success = await markNotificationReadAPI(item.id);
 
-      // update UI instantly
-      setNotifications((prev) =>
-        prev.map((notification) =>
-          notification.id === item.id
-            ? { ...notification, isRead: true }
-            : notification,
-        ),
-      );
+      if (success) {
+        setNotifications((prev) =>
+          prev.map((notification) =>
+            notification.id === item.id
+              ? { ...notification, isRead: true }
+              : notification,
+          ),
+        );
+      }
 
-      // navigate to post detail page
-      navigation.navigate("PostDetail", {
-        postId: item.postId,
-      });
+      // Navigate only when notification has a postId
+      if (item.postId) {
+        navigation.navigate("PostDetail", {
+          postId: item.postId,
+        });
+      }
     } catch (error) {
       console.log("Open Notification Error:", error);
+    }
+  };
+
+  // ======================
+  // Mark All Notifications Read
+  // ======================
+  const handleMarkAllRead = async () => {
+    try {
+      const success = await markAllNotificationsReadAPI();
+
+      if (!success) {
+        console.log("Failed to mark all notifications as read");
+        return;
+      }
+
+      // Update UI instantly
+      setNotifications((prev) =>
+        prev.map((notification) => ({
+          ...notification,
+          isRead: true,
+        })),
+      );
+    } catch (error) {
+      console.log("Mark All Read Error:", error);
     }
   };
 
@@ -82,6 +109,8 @@ const NotificationPage = () => {
   const renderNotification = ({ item }) => (
     <TouchableOpacity onPress={() => openNotification(item)}>
       <View style={[styles.card, !item.isRead && styles.unreadCard]}>
+        <Text style={styles.title}>{item.title}</Text>
+
         <Text style={styles.message}>{item.message}</Text>
 
         <Text style={styles.time}>
@@ -107,7 +136,18 @@ const NotificationPage = () => {
   // ======================
   return (
     <View style={styles.container}>
-      <Text style={styles.heading}>Notifications</Text>
+      <View style={styles.header}>
+        <Text style={styles.heading}>Notifications</Text>
+
+        {notifications.some((notification) => !notification.isRead) && (
+          <TouchableOpacity
+            onPress={handleMarkAllRead}
+            style={styles.markAllButton}
+          >
+            <Text style={styles.markAllText}>Mark all as read</Text>
+          </TouchableOpacity>
+        )}
+      </View>
 
       <FlatList
         data={notifications}
@@ -129,10 +169,27 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
   },
 
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+
   heading: {
     fontSize: 22,
     fontWeight: "bold",
-    marginBottom: 20,
+  },
+
+  markAllButton: {
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+  },
+
+  markAllText: {
+    fontSize: 13,
+    color: "#0ea5e9",
+    fontWeight: "600",
   },
 
   card: {
@@ -146,6 +203,12 @@ const styles = StyleSheet.create({
     backgroundColor: "#dbeafe",
     borderWidth: 1,
     borderColor: "#93c5fd",
+  },
+
+  title: {
+    fontSize: 16,
+    fontWeight: "bold",
+    marginBottom: 5,
   },
 
   message: {

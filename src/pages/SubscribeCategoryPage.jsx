@@ -1,6 +1,4 @@
-// pages/SubscribeCategoryPage.jsx
-
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import {
   View,
@@ -13,16 +11,56 @@ import {
 
 import { useNavigation } from "@react-navigation/native";
 
-import { subscribeCategoryAPI } from "../api/subscriptionService";
+import {
+  subscribeCategoryAPI,
+  unsubscribeCategoryAPI,
+  getMySubscriptionsAPI,
+} from "../api/subscriptionService";
 
 const categories = ["BOOK", "CLOTH", "ELECTRONIC", "TOYS"];
+
+const CATEGORY_IDS = {
+  BOOK: "1",
+  CLOTH: "2",
+  ELECTRONIC: "3",
+  TOYS: "4",
+};
 
 export default function SubscribeCategoryPage() {
   const navigation = useNavigation();
 
   const [selected, setSelected] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
-  const [loading, setLoading] = useState(false);
+  // ======================
+  // Load Existing Subscriptions
+  // ======================
+  useEffect(() => {
+    loadSubscriptions();
+  }, []);
+
+  const loadSubscriptions = async () => {
+    try {
+      setLoading(true);
+
+      const subscriptions = await getMySubscriptionsAPI();
+
+      console.log("EXISTING SUBSCRIPTIONS:", subscriptions);
+
+      const subscribedCategories = categories.filter((category) =>
+        subscriptions.some(
+          (categoryId) => String(categoryId) === CATEGORY_IDS[category],
+        ),
+      );
+
+      setSelected(subscribedCategories);
+    } catch (error) {
+      console.log("Loading Subscriptions Error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // ======================
   // Toggle Category
@@ -30,7 +68,7 @@ export default function SubscribeCategoryPage() {
   const toggleCategory = (item) => {
     setSelected((prev) => {
       if (prev.includes(item)) {
-        return prev.filter((c) => c !== item);
+        return prev.filter((category) => category !== item);
       }
 
       return [...prev, item];
@@ -38,42 +76,79 @@ export default function SubscribeCategoryPage() {
   };
 
   // ======================
-  // Submit Subscription
+  // Save Subscription Changes
   // ======================
   const submit = async () => {
     try {
-      if (selected.length === 0) {
-        Alert.alert("Select Category", "Please select at least one category");
+      setSaving(true);
 
-        return;
+      const existingSubscriptions = await getMySubscriptionsAPI();
+
+      const existingCategories = categories.filter((category) =>
+        existingSubscriptions.some(
+          (categoryId) => String(categoryId) === CATEGORY_IDS[category],
+        ),
+      );
+
+      // Categories newly selected
+      const categoriesToSubscribe = selected.filter(
+        (category) => !existingCategories.includes(category),
+      );
+
+      // Categories previously selected but now removed
+      const categoriesToUnsubscribe = existingCategories.filter(
+        (category) => !selected.includes(category),
+      );
+
+      console.log("TO SUBSCRIBE:", categoriesToSubscribe);
+      console.log("TO UNSUBSCRIBE:", categoriesToUnsubscribe);
+
+      // ======================
+      // Subscribe New Categories
+      // ======================
+      if (categoriesToSubscribe.length > 0) {
+        const subscribeResponse = await subscribeCategoryAPI(
+          categoriesToSubscribe,
+        );
+
+        if (!subscribeResponse?.success) {
+          throw new Error("Subscription failed");
+        }
       }
 
-      setLoading(true);
+      // ======================
+      // Unsubscribe Removed Categories
+      // ======================
+      for (const category of categoriesToUnsubscribe) {
+        const success = await unsubscribeCategoryAPI(category);
 
-      const formattedCategories = selected.map((item) => item.toUpperCase());
+        if (!success) {
+          throw new Error(`Failed to unsubscribe ${category}`);
+        }
+      }
 
-      console.log("Sending Categories:", formattedCategories);
+      Alert.alert("Success", "Category subscriptions updated successfully");
 
-      // save on backend only
-      const response = await subscribeCategoryAPI(formattedCategories);
-
-      console.log("SUBSCRIBE RESPONSE:", response);
-
-      Alert.alert("Success", "Categories subscribed successfully");
-
-      // reset selection
-      setSelected([]);
-
-      // optional navigation
       navigation.goBack();
     } catch (error) {
-      console.log("Subscription Error:", error);
+      console.log("Subscription Update Error:", error);
 
-      Alert.alert("Error", "Subscription failed");
+      Alert.alert("Error", "Failed to update category subscriptions");
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
+
+  // ======================
+  // Loading Existing State
+  // ======================
+  if (loading) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
 
   // ======================
   // Main UI
@@ -92,7 +167,6 @@ export default function SubscribeCategoryPage() {
           <Text
             style={[
               styles.categoryText,
-
               selected.includes(item) && styles.selectedText,
             ]}
           >
@@ -108,18 +182,17 @@ export default function SubscribeCategoryPage() {
       <TouchableOpacity
         style={[
           styles.button,
-
-          loading && {
+          saving && {
             opacity: 0.7,
           },
         ]}
         onPress={submit}
-        disabled={loading}
+        disabled={saving}
       >
-        {loading ? (
+        {saving ? (
           <ActivityIndicator color="#fff" />
         ) : (
-          <Text style={styles.buttonText}>Submit</Text>
+          <Text style={styles.buttonText}>Save Changes</Text>
         )}
       </TouchableOpacity>
     </View>
@@ -194,5 +267,11 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     fontWeight: "bold",
+  },
+
+  center: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
