@@ -13,10 +13,7 @@ export const getNotificationsAPI = async () => {
             isRead
             postId
             createdAt
-            post {
-              id
-              title
-            }
+            readAt
           }
         }
       `,
@@ -48,6 +45,25 @@ export const markNotificationReadAPI = async (notificationId) => {
   }
 };
 
+// MARK ALL NOTIFICATIONS READ
+export const markAllNotificationsReadAPI = async () => {
+  try {
+    const response = await api.post("", {
+      query: `
+        mutation MarkAllNotificationsRead {
+          markAllNotificationsRead
+        }
+      `,
+    });
+
+    return response?.data?.data?.markAllNotificationsRead || false;
+  } catch (error) {
+    console.log("Mark All Notifications Error:", error.response?.data || error);
+
+    return false;
+  }
+};
+
 // GET UNREAD NOTIFICATION COUNT
 export const getUnreadNotificationCountAPI = async () => {
   try {
@@ -65,6 +81,7 @@ export const getUnreadNotificationCountAPI = async () => {
       "Unread Notification Count Error:",
       error.response?.data || error,
     );
+
     return 0;
   }
 };
