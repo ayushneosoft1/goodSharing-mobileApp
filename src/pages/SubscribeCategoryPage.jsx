@@ -17,14 +17,7 @@ import {
   getMySubscriptionsAPI,
 } from "../api/subscriptionService";
 
-const categories = ["BOOK", "CLOTH", "ELECTRONIC", "TOYS"];
-
-const CATEGORY_IDS = {
-  BOOK: "1",
-  CLOTH: "2",
-  ELECTRONIC: "3",
-  TOYS: "4",
-};
+import { CATEGORIES } from "../constants/categories";
 
 export default function SubscribeCategoryPage() {
   const navigation = useNavigation();
@@ -48,13 +41,13 @@ export default function SubscribeCategoryPage() {
 
       console.log("EXISTING SUBSCRIPTIONS:", subscriptions);
 
-      const subscribedCategories = categories.filter((category) =>
+      const subscribedCategories = CATEGORIES.filter((category) =>
         subscriptions.some(
-          (categoryId) => String(categoryId) === CATEGORY_IDS[category],
+          (categoryId) => String(categoryId) === category.id,
         ),
       );
 
-      setSelected(subscribedCategories);
+      setSelected(subscribedCategories.map((category) => category.code));
     } catch (error) {
       console.log("Loading Subscriptions Error:", error);
     } finally {
@@ -84,21 +77,24 @@ export default function SubscribeCategoryPage() {
 
       const existingSubscriptions = await getMySubscriptionsAPI();
 
-      const existingCategories = categories.filter((category) =>
+      const existingCategories = CATEGORIES.filter((category) =>
         existingSubscriptions.some(
-          (categoryId) => String(categoryId) === CATEGORY_IDS[category],
+          (categoryId) => String(categoryId) === category.id,
         ),
       );
 
       // Categories newly selected
       const categoriesToSubscribe = selected.filter(
-        (category) => !existingCategories.includes(category),
+        (category) =>
+          !existingCategories.some(
+            (existingCategory) => existingCategory.code === category,
+          ),
       );
 
       // Categories previously selected but now removed
-      const categoriesToUnsubscribe = existingCategories.filter(
-        (category) => !selected.includes(category),
-      );
+      const categoriesToUnsubscribe = existingCategories
+        .map((category) => category.code)
+        .filter((category) => !selected.includes(category));
 
       console.log("TO SUBSCRIBE:", categoriesToSubscribe);
       console.log("TO UNSUBSCRIBE:", categoriesToUnsubscribe);
@@ -157,24 +153,24 @@ export default function SubscribeCategoryPage() {
     <View style={styles.container}>
       <Text style={styles.title}>Select Categories</Text>
 
-      {categories.map((item) => (
+      {CATEGORIES.map((item) => (
         <TouchableOpacity
-          key={item}
-          style={[styles.row, selected.includes(item) && styles.selectedRow]}
-          onPress={() => toggleCategory(item)}
+          key={item.code}
+          style={[styles.row, selected.includes(item.code) && styles.selectedRow]}
+          onPress={() => toggleCategory(item.code)}
           activeOpacity={0.8}
         >
           <Text
             style={[
               styles.categoryText,
-              selected.includes(item) && styles.selectedText,
+              selected.includes(item.code) && styles.selectedText,
             ]}
           >
-            {item}
+            {item.label}
           </Text>
 
           <Text style={styles.checkbox}>
-            {selected.includes(item) ? "☑" : "☐"}
+            {selected.includes(item.code) ? "☑" : "☐"}
           </Text>
         </TouchableOpacity>
       ))}

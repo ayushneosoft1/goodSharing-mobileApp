@@ -1,11 +1,5 @@
 import api from "../services/api";
-
-const CATEGORY_IDS = {
-  BOOK: "1",
-  CLOTH: "2",
-  ELECTRONIC: "3",
-  TOYS: "4",
-};
+import { CATEGORY_IDS } from "../constants/categories";
 
 export const subscribeCategoryAPI = async (categories) => {
   try {

@@ -10,12 +10,7 @@ import {
 
 import { getMySubscriptionsAPI } from "../api/subscriptionService";
 
-const CATEGORY_NAMES = {
-  1: "BOOK",
-  2: "CLOTH",
-  3: "ELECTRONIC",
-  4: "TOYS",
-};
+import { CATEGORY_NAMES } from "../constants/categories";
 
 const MySubscriptionsPage = () => {
   const [subscriptions, setSubscriptions] = useState([]);
