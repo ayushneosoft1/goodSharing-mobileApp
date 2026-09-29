@@ -43,13 +43,17 @@ export default function SubscribeCategoryPage() {
 
       const subscribedCategories = CATEGORIES.filter((category) =>
         subscriptions.some(
-          (categoryId) => String(categoryId) === category.id,
+          (subscription) => String(subscription.categoryId) === category.id,
         ),
       );
 
       setSelected(subscribedCategories.map((category) => category.code));
     } catch (error) {
       console.log("Loading Subscriptions Error:", error);
+      Alert.alert(
+        "Error",
+        error?.message || "Failed to load category subscriptions",
+      );
     } finally {
       setLoading(false);
     }
@@ -79,7 +83,7 @@ export default function SubscribeCategoryPage() {
 
       const existingCategories = CATEGORIES.filter((category) =>
         existingSubscriptions.some(
-          (categoryId) => String(categoryId) === category.id,
+          (subscription) => String(subscription.categoryId) === category.id,
         ),
       );
 

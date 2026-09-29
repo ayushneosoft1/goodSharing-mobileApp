@@ -6,6 +6,7 @@ import {
   FlatList,
   ActivityIndicator,
   StyleSheet,
+  Alert,
 } from "react-native";
 
 import { getMySubscriptionsAPI } from "../api/subscriptionService";
@@ -27,6 +28,10 @@ const MySubscriptionsPage = () => {
       setSubscriptions(data || []);
     } catch (error) {
       console.log("Loading error:", error);
+      Alert.alert(
+        "Error",
+        error?.message || "Failed to load category subscriptions",
+      );
     } finally {
       setLoading(false);
     }
@@ -49,11 +54,12 @@ const MySubscriptionsPage = () => {
       ) : (
         <FlatList
           data={subscriptions}
-          keyExtractor={(item) => String(item)}
+          keyExtractor={(item) => String(item.id)}
           renderItem={({ item }) => (
             <View style={styles.card}>
               <Text style={styles.text}>
-                {CATEGORY_NAMES[String(item)] || `Category ${item}`}
+                {CATEGORY_NAMES[String(item.categoryId)] ||
+                  `Category ${item.categoryId}`}
               </Text>
             </View>
           )}
