@@ -1,11 +1,5 @@
 import api from "../services/api";
-
-const CATEGORY_IDS = {
-  BOOK: "1",
-  CLOTH: "2",
-  ELECTRONIC: "3",
-  TOYS: "4",
-};
+import { CATEGORY_IDS } from "../constants/categories";
 
 export const subscribeCategoryAPI = async (categories) => {
   try {
@@ -30,13 +24,24 @@ export const subscribeCategoryAPI = async (categories) => {
       });
 
       console.log("SUBSCRIBE RESPONSE:", response.data);
+
+      const errors = response?.data?.errors;
+
+      if (errors?.length) {
+        throw new Error(
+          errors[0]?.message || "Failed to subscribe to category",
+        );
+      }
     }
 
     return { success: true };
   } catch (error) {
-    console.log("Subscription API Error:", error?.response?.data || error);
+    console.log(
+      "Subscription API Error:",
+      error?.response?.data || error?.message || error,
+    );
 
-    return null;
+    throw error;
   }
 };
 
@@ -61,14 +66,22 @@ export const unsubscribeCategoryAPI = async (category) => {
 
     console.log("UNSUBSCRIBE RESPONSE:", response.data);
 
+    const errors = response?.data?.errors;
+
+    if (errors?.length) {
+      throw new Error(
+        errors[0]?.message || "Failed to unsubscribe from category",
+      );
+    }
+
     return response?.data?.data?.unsubscribeCategory || false;
   } catch (error) {
     console.log(
       "Unsubscribe Category API Error:",
-      error?.response?.data || error,
+      error?.response?.data || error?.message || error,
     );
 
-    return false;
+    throw error;
   }
 };
 
@@ -77,17 +90,31 @@ export const getMySubscriptionsAPI = async () => {
     const response = await api.post("", {
       query: `
         query {
-          userCategorySubscriptions
+          userCategorySubscriptions {
+            id
+            userId
+            categoryId
+            createdAt
+          }
         }
       `,
     });
 
-    console.log("MY SUBSCRIPTIONS:", response.data);
+    const errors = response?.data?.errors;
 
-    return response?.data?.data?.userCategorySubscriptions || [];
+    if (errors?.length) {
+      throw new Error(errors[0]?.message || "Failed to load subscriptions");
+    }
+
+    const subscriptions = response?.data?.data?.userCategorySubscriptions || [];
+
+    return subscriptions;
   } catch (error) {
-    console.log("Subscription API Error:", error?.response?.data || error);
+    console.log(
+      "Subscription API Error:",
+      error?.response?.data || error?.message || error,
+    );
 
-    return [];
+    throw error;
   }
 };

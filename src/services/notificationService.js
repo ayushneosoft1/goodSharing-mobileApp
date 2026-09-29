@@ -50,7 +50,6 @@ export async function registerForPushNotifications() {
       return null;
     }
 
-    console.log("Native FCM Token:", fcmToken);
     return fcmToken;
   } catch (error) {
     console.log("Error registering for push notifications:", error);
