@@ -1,6 +1,6 @@
 // ./pages/PostsListPage.jsx
 
-import React, { useState, useCallback, useLayoutEffect } from "react";
+import React, { useState, useCallback } from "react";
 
 import {
   View,
@@ -13,15 +13,11 @@ import {
   FlatList,
 } from "react-native";
 
-import { Ionicons } from "@expo/vector-icons";
-
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 
 import { useAuth } from "../contexts/AuthContext";
 
 import { getPostsAPI } from "../api/postService";
-
-import { getUnreadNotificationCountAPI } from "../api/notificationService";
 
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -36,52 +32,6 @@ export default function PostsListPage() {
 
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  const [unreadCount, setUnreadCount] = useState(0);
-
-  // ======================
-  // Header Buttons
-  // ======================
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      headerStyle: {
-        backgroundColor: "#ffffff",
-      },
-      headerTintColor: "#000000",
-      headerTitleStyle: {
-        color: "#000000",
-        fontWeight: "bold",
-      },
-
-      headerLeft: () => (
-        <TouchableOpacity
-          onPress={() => navigation.openDrawer()}
-          style={{ paddingLeft: 15 }}
-        >
-          <Ionicons name="menu" size={28} color="#000" />
-        </TouchableOpacity>
-      ),
-
-      headerTitle: "goodSharing",
-
-      headerRight: () => (
-        <TouchableOpacity
-          onPress={() => navigation.navigate("NotificationPage")}
-          style={styles.notificationBtn}
-        >
-          <Ionicons name="notifications-outline" size={26} color="#000" />
-
-          {unreadCount > 0 && (
-            <View style={styles.notificationBadge}>
-              <Text style={styles.notificationBadgeText}>
-                {unreadCount > 99 ? "99+" : unreadCount}
-              </Text>
-            </View>
-          )}
-        </TouchableOpacity>
-      ),
-    });
-  }, [navigation, unreadCount]);
 
   // ======================
   // Format Date
@@ -112,26 +62,11 @@ export default function PostsListPage() {
   };
 
   // ======================
-  // Fetch Notification Count
-  // ======================
-  const fetchUnreadCount = async () => {
-    try {
-      const count = await getUnreadNotificationCountAPI();
-
-      setUnreadCount(count || 0);
-    } catch (error) {
-      console.log("Unread Count Error:", error);
-    }
-  };
-
-  // ======================
   // Refresh on Screen Focus
   // ======================
   useFocusEffect(
     useCallback(() => {
       fetchPosts();
-
-      fetchUnreadCount();
     }, [token]),
   );
 
@@ -232,29 +167,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
-  },
-
-  notificationBtn: {
-    marginRight: 15,
-  },
-
-  notificationBadge: {
-    position: "absolute",
-    top: -5,
-    right: -8,
-    backgroundColor: "red",
-    borderRadius: 10,
-    minWidth: 18,
-    height: 18,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 4,
-  },
-
-  notificationBadgeText: {
-    color: "#fff",
-    fontSize: 10,
-    fontWeight: "bold",
   },
 
   postCard: {
