@@ -6,7 +6,8 @@
     "owner": "nilesh2026",
     "android": {
       "package": "com.neosoft.goodsharing",
-      "googleServicesFile": "./google-services.json"
+      "googleServicesFile": "./google-services.json",
+      "versionCode": 4
     },
     "plugins": [
       [
