@@ -61,24 +61,15 @@ function Navigation() {
 }
 
 export default function App() {
-  const notificationListener = useRef();
   const responseListener = useRef();
 
   useEffect(() => {
-    console.log("APP USEEFFECT STARTED");
-
-    // Foreground notification listener
-    notificationListener.current =
-      Notifications.addNotificationReceivedListener((notification) => {
-        console.log("Notification received:", notification);
-      });
 
     // Notification click listener
     responseListener.current =
       Notifications.addNotificationResponseReceivedListener((response) => {
         const data = response.notification.request.content.data;
 
-        console.log("Notification clicked. Data:", data);
 
         const postId = data?.postId;
 
@@ -91,7 +82,6 @@ export default function App() {
     Notifications.getLastNotificationResponseAsync().then((response) => {
       const data = response?.notification?.request?.content?.data;
 
-      console.log("Killed-state notification data:", data);
 
       const postId = data?.postId;
 
@@ -103,7 +93,6 @@ export default function App() {
     });
 
     return () => {
-      notificationListener.current?.remove();
       responseListener.current?.remove();
     };
   }, []);
