@@ -72,11 +72,9 @@ export function AuthProvider({ children }) {
 
       await AsyncStorage.setItem(DEVICE_ID_STORAGE_KEY, deviceId);
 
-      console.log("Created new device ID:", deviceId);
 
       return deviceId;
     } catch (error) {
-      console.log("Device ID error:", error);
 
       return null;
     }
@@ -103,15 +101,10 @@ export function AuthProvider({ children }) {
   const registerCurrentDevice = async (authToken) => {
     try {
       if (!authToken) {
-        console.log("Device registration skipped: no auth token");
 
         return null;
       }
 
-      console.log("AUTH TOKEN CHECK:", {
-        exists: !!authToken,
-        length: authToken?.length || 0,
-      });
 
       // ------------------------------------------------------
       // 1. Get native FCM token
@@ -120,7 +113,6 @@ export function AuthProvider({ children }) {
       const fcmToken = await registerForPushNotifications();
 
       if (!fcmToken) {
-        console.log("Device registration skipped: no native FCM token");
 
         return null;
       }
@@ -132,7 +124,6 @@ export function AuthProvider({ children }) {
       const deviceId = await getDeviceId();
 
       if (!deviceId) {
-        console.log("Device registration skipped: no device ID");
 
         return null;
       }
@@ -147,10 +138,6 @@ export function AuthProvider({ children }) {
       // 4. Register device with backend
       // ------------------------------------------------------
 
-      console.log("Registering current device:", {
-        deviceId,
-        platform,
-      });
 
       const result = await registerDeviceAPI({
         deviceId,
@@ -160,7 +147,6 @@ export function AuthProvider({ children }) {
       });
 
       if (result?.error) {
-        console.log("Device registration API error:", result.error);
 
         return null;
       }
@@ -171,7 +157,6 @@ export function AuthProvider({ children }) {
 
       await AsyncStorage.setItem(FCM_TOKEN_STORAGE_KEY, fcmToken);
 
-      console.log("Device registered successfully:", result.data);
 
       return result.data;
     } catch (error) {
@@ -181,7 +166,6 @@ export function AuthProvider({ children }) {
        * Push/device registration must NEVER break
        * authentication.
        */
-      console.log("Register current device error:", error);
 
       return null;
     }
@@ -225,7 +209,6 @@ export function AuthProvider({ children }) {
           try {
             setUser(JSON.parse(storedUser));
           } catch (error) {
-            console.log("Invalid saved user data:", error);
 
             await AsyncStorage.removeItem(USER_STORAGE_KEY);
           }
@@ -244,13 +227,9 @@ export function AuthProvider({ children }) {
 
           try {
             await registerCurrentDevice(storedToken);
-          } catch (error) {
-            console.log("Startup device registration error:", error);
-          }
+          } catch {}
         }
-      } catch (error) {
-        console.log("Load saved authentication error:", error);
-      } finally {
+      } catch {} finally {
         setLoading(false);
       }
     };
@@ -289,7 +268,6 @@ export function AuthProvider({ children }) {
           const fcmToken = tokenData?.data;
 
           if (!fcmToken) {
-            console.log("FCM token change detected but token is empty");
 
             return;
           }
@@ -301,7 +279,6 @@ export function AuthProvider({ children }) {
           const deviceId = await getDeviceId();
 
           if (!deviceId) {
-            console.log("FCM token rotation skipped: no device ID");
 
             return;
           }
@@ -312,10 +289,6 @@ export function AuthProvider({ children }) {
 
           const platform = Platform.OS === "ios" ? "ios" : "android";
 
-          console.log("FCM token changed. Updating device registration:", {
-            deviceId,
-            platform,
-          });
 
           // ------------------------------------------------
           // Register the new token
@@ -329,10 +302,6 @@ export function AuthProvider({ children }) {
           });
 
           if (result?.error) {
-            console.log(
-              "FCM token rotation registration failed:",
-              result.error,
-            );
 
             return;
           }
@@ -343,14 +312,9 @@ export function AuthProvider({ children }) {
 
           await AsyncStorage.setItem(FCM_TOKEN_STORAGE_KEY, fcmToken);
 
-          console.log("FCM token rotation handled successfully:", result.data);
-        } catch (error) {
-          console.log("FCM token rotation error:", error);
-        }
+        } catch {}
       });
-    } catch (error) {
-      console.log("Unable to create FCM token listener:", error);
-    }
+    } catch {}
 
     // --------------------------------------------------------
     // Cleanup listener
@@ -359,9 +323,7 @@ export function AuthProvider({ children }) {
     return () => {
       try {
         subscription?.remove();
-      } catch (error) {
-        console.log("FCM token listener cleanup error:", error);
-      }
+      } catch {}
     };
   }, [token]);
 
@@ -416,13 +378,10 @@ export function AuthProvider({ children }) {
       //
       try {
         await registerCurrentDevice(authToken);
-      } catch (error) {
-        console.log("Post-login device registration error:", error);
-      }
+      } catch {}
 
       return result;
     } catch (error) {
-      console.log("Login error:", error);
 
       return {
         error: error.message || "Login failed",
@@ -480,13 +439,10 @@ export function AuthProvider({ children }) {
 
       try {
         await registerCurrentDevice(authToken);
-      } catch (error) {
-        console.log("Post-signup device registration error:", error);
-      }
+      } catch {}
 
       return result;
     } catch (error) {
-      console.log("Signup error:", error);
 
       return {
         error: error.message || "Signup failed",
@@ -523,36 +479,21 @@ export function AuthProvider({ children }) {
 
       if (authToken && deviceId) {
         try {
-          console.log("Unregistering device before logout:", {
-            deviceId,
-          });
 
           const result = await unregisterDeviceAPI({
             deviceId,
             authToken,
           });
 
-          if (result?.error) {
-            console.log("Device unregister API error:", result.error);
-          } else {
-            console.log("Device unregistered successfully:", result.data);
-          }
+
         } catch (error) {
           /*
            * Logout must continue even if device
            * unregister fails.
            */
-          console.log("Device unregister exception:", error);
         }
-      } else {
-        console.log("Device unregister skipped:", {
-          hasAuthToken: !!authToken,
-          hasDeviceId: !!deviceId,
-        });
       }
-    } catch (error) {
-      console.log("Logout preparation error:", error);
-    } finally {
+    } catch {} finally {
       // ------------------------------------------------------
       // Clear authentication storage
       // ------------------------------------------------------
@@ -563,9 +504,7 @@ export function AuthProvider({ children }) {
           TOKEN_STORAGE_KEY,
           FCM_TOKEN_STORAGE_KEY,
         ]);
-      } catch (error) {
-        console.log("Logout storage cleanup error:", error);
-      }
+      } catch {}
 
       // IMPORTANT:
       // Do NOT remove DEVICE_ID_STORAGE_KEY.

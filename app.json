@@ -7,7 +7,7 @@
     "android": {
       "package": "com.neosoft.goodsharing",
       "googleServicesFile": "./google-services.json",
-      "versionCode": 4
+      "versionCode": 5
     },
     "plugins": [
       [

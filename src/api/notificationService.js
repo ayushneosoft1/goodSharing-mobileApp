@@ -21,7 +21,7 @@ export const getNotificationsAPI = async () => {
 
     return response?.data?.data?.notifications || [];
   } catch (error) {
-    console.log("Notification API Error:", error.response?.data || error);
+    console.log("Notification API request failed");
     return [];
   }
 };
@@ -40,7 +40,7 @@ export const markNotificationReadAPI = async (notificationId) => {
 
     return response?.data?.data?.markNotificationRead || false;
   } catch (error) {
-    console.log("Mark Notification Error:", error.response?.data || error);
+    console.log("Mark notification request failed");
     return false;
   }
 };
@@ -58,7 +58,7 @@ export const markAllNotificationsReadAPI = async () => {
 
     return response?.data?.data?.markAllNotificationsRead || false;
   } catch (error) {
-    console.log("Mark All Notifications Error:", error.response?.data || error);
+    console.log("Mark all notifications request failed");
 
     return false;
   }
@@ -77,10 +77,7 @@ export const getUnreadNotificationCountAPI = async () => {
 
     return response?.data?.data?.unreadNotificationCount || 0;
   } catch (error) {
-    console.log(
-      "Unread Notification Count Error:",
-      error.response?.data || error,
-    );
+    console.log("Unread notification count request failed");
 
     return 0;
   }
