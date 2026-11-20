@@ -7,4 +7,4 @@ const LAN_IP = "192.168.0.128";
 //  ? `http://${LAN_IP}:4000/graphql`
 //  : `http://${LAN_IP}:4000/graphql`;
 
-export const BASE_URL = "https://goodsharing.cloud/graphql";
+export const BASE_URL = "https://goodsharing.space/graphql";
